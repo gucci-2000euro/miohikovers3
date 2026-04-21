@@ -1,0 +1,119 @@
+import { useAuthStore } from '@/store/useAuthStore';
+import { Settings, LogOut, Award, Activity, Calendar } from 'lucide-react';
+import { useLocation } from 'wouter';
+
+export default function Profile() {
+  const { user, logout } = useAuthStore();
+  const [, setLocation] = useLocation();
+
+  if (!user) return null;
+
+  const handleLogout = () => {
+    logout();
+    setLocation('/auth');
+  };
+
+  return (
+    <div className="min-h-screen bg-hiko-deep text-white pb-24 overflow-y-auto">
+      {/* Header */}
+      <div className="px-6 pt-12 pb-6 bg-gradient-to-b from-hiko-muted/30 to-transparent relative">
+        <div className="absolute top-6 right-6 flex gap-3">
+          <button className="p-2 glass-panel rounded-full hover:bg-white/20 transition-colors">
+            <Settings size={20} />
+          </button>
+          <button onClick={handleLogout} className="p-2 glass-panel rounded-full hover:bg-red-500/20 text-red-400 transition-colors">
+            <LogOut size={20} />
+          </button>
+        </div>
+
+        <div className="flex flex-col items-center mt-6">
+          <div className="relative mb-4">
+            <img src={user.avatar} alt={user.name} className="w-24 h-24 rounded-full object-cover border-2 border-hiko-primary p-1" />
+            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-hiko-primary text-hiko-deep text-xs font-bold px-3 py-1 rounded-full shadow-lg">
+              Lv {user.level}
+            </div>
+          </div>
+          <h1 className="text-2xl font-bold mb-1">{user.name}</h1>
+          <p className="text-hiko-primary font-medium text-sm">{user.title}</p>
+        </div>
+      </div>
+
+      <div className="px-6 space-y-6">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="glass-panel p-4 rounded-2xl">
+            <div className="flex items-center gap-2 text-white/50 text-xs font-medium uppercase tracking-wider mb-2">
+              <Activity size={14} /> Total Distance
+            </div>
+            <p className="text-2xl font-bold">{user.totalKm} <span className="text-sm font-normal text-white/50">km</span></p>
+          </div>
+          <div className="glass-panel p-4 rounded-2xl">
+            <div className="flex items-center gap-2 text-white/50 text-xs font-medium uppercase tracking-wider mb-2">
+              <Calendar size={14} /> Total Runs
+            </div>
+            <p className="text-2xl font-bold">{user.totalRuns}</p>
+          </div>
+          <div className="glass-panel p-4 rounded-2xl">
+            <div className="flex items-center gap-2 text-white/50 text-xs font-medium uppercase tracking-wider mb-2">
+              Longest Run
+            </div>
+            <p className="text-xl font-bold">{user.longestRun} <span className="text-sm font-normal text-white/50">km</span></p>
+          </div>
+          <div className="glass-panel p-4 rounded-2xl">
+            <div className="flex items-center gap-2 text-white/50 text-xs font-medium uppercase tracking-wider mb-2">
+              Weekly Avg
+            </div>
+            <p className="text-xl font-bold">{user.weeklyAvg} <span className="text-sm font-normal text-white/50">km</span></p>
+          </div>
+        </div>
+
+        {/* Badges Section */}
+        <div>
+          <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+            <Award size={20} className="text-hiko-primary" /> Earned Badges
+          </h3>
+          <div className="grid grid-cols-3 gap-4">
+            {[
+              { name: "Dawn Patrol", icon: "🌅" },
+              { name: "10K Crusher", icon: "👟" },
+              { name: "Trail Whisperer", icon: "🌲" }
+            ].map((badge, i) => (
+              <div key={i} className="flex flex-col items-center">
+                <div className="w-16 h-16 bg-hiko-primary/10 border border-hiko-primary/30 rounded-2xl flex items-center justify-center mb-2 transform rotate-45">
+                  <div className="-rotate-45 text-2xl filter grayscale brightness-200 sepia hue-rotate-90 saturate-200">
+                    <Award size={28} className="text-hiko-primary drop-shadow-md" />
+                  </div>
+                </div>
+                <p className="text-[10px] text-center font-medium text-white/70 uppercase tracking-wide px-1">{badge.name}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Recent Activities */}
+        <div>
+          <h3 className="text-lg font-bold mb-4">Recent Activities</h3>
+          <div className="space-y-3">
+            {[1, 2, 3].map((_, i) => (
+              <div key={i} className="glass-panel p-4 rounded-xl flex justify-between items-center">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center">
+                    <Activity size={18} className="text-white/70" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-sm">Evening Run</p>
+                    <p className="text-xs text-white/50">{i === 0 ? 'Today' : `${i} days ago`}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="font-bold text-sm">{5 + i}.2 km</p>
+                  <p className="text-xs text-white/50">{(25 + i * 2)}:00</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

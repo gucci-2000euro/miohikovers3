@@ -1,0 +1,340 @@
+Create a web application called “Hiko”, an intelligent running assistant inspired by Strava, but designed with a stronger focus on real-time immersion, social interaction, and user progression.
+
+The application should not feel like a simple tracking tool, but rather a living ecosystem where users continuously perceive the presence of other runners, active challenges, and nearby routes. The experience must be mobile-first, fluid, visually minimal, yet expressive, with a strong connection to nature and movement.
+
+---
+
+TECH STACK:
+
+Use React with TypeScript and Vite to ensure a fast and modern frontend architecture. Integrate Supabase for authentication, database management, and real-time features. Structure the project so it is clean, scalable, and ready for deployment on Vercel.
+
+For state management, use Zustand (preferred) or Context API.
+
+For maps, use Mapbox GL JS (preferred) or Leaflet, ensuring smooth performance on mobile devices and support for dynamic, real-time markers.
+
+---
+
+VISUAL IDENTITY AND DESIGN SYSTEM:
+
+The entire UI must revolve around the concept of “green energy” and natural motion.
+
+Define global CSS variables:
+
+--green-primary: #31E981
+--green-dark: #14591D
+--green-deep: #0E402D
+--green-muted: #295135
+
+The main background should be a deep green tone to enhance contrast and highlight interactive elements. Use subtle gradients between darker and brighter greens to create depth.
+
+UI surfaces such as cards, modals, and bottom sheets should feature:
+
+* Rounded corners (16–20px)
+* Soft, diffused shadows
+* Light glassmorphism effects (blur + transparency)
+
+Animations must be smooth and natural, using ease-in-out transitions, especially for:
+
+* Opening and closing panels
+* Screen transitions
+* Marker appearance on the map
+
+---
+
+APPLICATION STRUCTURE:
+
+The app is organized into five main sections, accessible via a fixed bottom navigation bar:
+
+1. Home (Map)
+2. Routes
+3. Challenges
+4. Social
+5. Profile
+
+The navigation bar should be minimal, using outline icons that fill when active.
+
+---
+
+AUTHENTICATION:
+
+On launch, display a clean authentication screen with:
+
+* Logo placeholder
+* Login / Signup options
+
+Use Supabase Auth (email/password).
+Persist user sessions.
+After login, redirect directly to the Home screen.
+
+---
+
+HOME – MAIN MAP (CORE EXPERIENCE):
+
+This is the central feature of the application and must occupy the full screen.
+
+The map should display:
+
+* The user’s position (animated circular avatar)
+* Available running routes (green markers)
+* Active challenges (visually distinct markers, e.g., glowing)
+* Other active runners (small avatars with subtle simulated movement)
+
+The map must feel alive, with continuous micro-interactions and real-time-like updates.
+
+INTERACTIONS:
+
+When a user taps on a marker:
+
+* The map performs a smooth zoom-in
+* A bottom sheet slides up from the bottom
+
+BOTTOM SHEET CONTENT:
+
+* Route name
+* Difficulty (easy, medium, hard)
+* Terrain type (asphalt, trail, mixed)
+* Elevation gain / slope
+* Best recorded time
+* Number of active runners
+* Presence of friends on that route
+
+If friends are present:
+display their avatars inline.
+
+Primary CTA:
+“START RUN”
+
+If the user is far from the starting point:
+display a “Navigate” button (external maps integration).
+
+---
+
+RUN SCREEN (ACTIVE SESSION EXPERIENCE):
+
+Once a run is started, the interface shifts into an immersive mode.
+
+UI characteristics:
+
+* Map centered on the route
+* Route path clearly highlighted
+* Real-time user position tracking
+
+Minimal overlay UI displaying:
+
+* Time (prominent and central)
+* Distance
+* Average pace
+
+Simulate voice guidance (placeholder logic):
+
+* “You are off route”
+* “Maintain your pace”
+
+If the user deviates from the route:
+
+* Trigger a visual alert
+* Simulate haptic feedback
+
+END OF RUN:
+
+Display a detailed modal including:
+
+* Total time
+* Distance covered
+* Average pace
+* Comparison with previous runs
+* Personal records (clearly highlighted)
+* Points earned
+* Completed challenges
+
+---
+
+ROUTES SECTION:
+
+A vertically scrollable list of routes.
+
+Header includes filtering options:
+
+* Difficulty
+* Most popular
+* Recommended
+* Near me
+
+Each route is displayed as a card with:
+
+* Placeholder image (green gradient)
+* Name
+* Distance
+* Difficulty
+
+On selection:
+navigate to a detailed route page including:
+
+* Mini map preview
+* Full statistics
+* User’s historical performance on that route
+
+---
+
+CHALLENGES SECTION:
+
+Structured into two main groups:
+
+* Community challenges
+* Personal challenges
+
+Each challenge card includes:
+
+* Title
+* Short description
+* Difficulty level
+* Reward points
+
+Each challenge has a state:
+
+* Active
+* Completed
+* Available
+
+Active challenges must display a progress bar (animated).
+
+Also display:
+
+* Total accumulated user points
+* History of completed challenges
+
+---
+
+SOCIAL SECTION (KEY DIFFERENTIATOR):
+
+This section should resemble Instagram, adapted for runners and activity sharing.
+
+FEED:
+
+A vertical scrolling feed of posts.
+
+Each post includes:
+
+* User avatar
+* Username
+* Image (run snapshot, route map, or personal photo)
+* Caption
+* Likes
+* Comments
+
+Interactions:
+
+* Animated like button
+* Expandable comments section
+* Real-time commenting using Supabase
+
+POST CREATION:
+
+A floating action button (+) opens a creation screen:
+
+* Image upload
+* Text input
+* Publish action
+
+Posts should feel dynamic and tied to real running activities.
+
+---
+
+FRIENDS SYSTEM:
+
+Accessible within the social section or as a dedicated subsection.
+
+Displays:
+
+* Friends list
+* Incoming/outgoing requests
+* Suggested users
+
+Each profile includes:
+
+* Statistics
+* Completed routes
+* Challenges
+
+---
+
+USER PROFILE:
+
+Personal dashboard including:
+
+HEADER:
+
+* Large avatar
+* Username
+* Level indicator
+
+STATISTICS:
+
+* Total kilometers
+* Total runs
+* Level progression
+
+SECTIONS:
+
+* Recent activities
+* Completed challenges
+* Earned badges
+
+Allow profile editing.
+
+---
+
+DATABASE STRUCTURE (SUPABASE):
+
+Define the following tables:
+
+users
+routes
+runs
+challenges
+posts
+comments
+friendships
+achievements
+
+Ensure proper relational structure between entities.
+
+---
+
+CODE ARCHITECTURE:
+
+Organize the project into:
+
+/components
+/pages
+/hooks
+/services
+/store
+/types
+
+Key components:
+
+* MapView
+* BottomSheet
+* PostCard
+* RouteCard
+* ChallengeCard
+
+---
+
+FINAL OBJECTIVE:
+
+Generate a fully functional MVP including:
+
+* Navigation system
+* Complete UI structure
+* Mock data
+* Basic Supabase integration
+
+Top priorities:
+
+* The map as the central experience
+* A strong sense of real-time user presence
+* A modern, engaging social layer
+
+The final result should feel like a real, production-ready product, not a prototype.

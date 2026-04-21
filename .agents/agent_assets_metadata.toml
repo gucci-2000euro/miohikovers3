@@ -1,0 +1,26 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "1LNd_N4FgeE9swCDs4zS6"
+uri = "file://artifacts/hiko/public/images/post1.png"
+type = "image"
+title = "runner at dusk"
+
+[[generated]]
+id = "hvXz6Mj3mGUhnPr4zhWv6"
+uri = "file://artifacts/hiko/public/images/post2.png"
+type = "image"
+title = "trail through forest"
+
+[[generated]]
+id = "aBQHyXynCvNIFEjvffRi3"
+uri = "file://artifacts/hiko/public/images/post3.png"
+type = "image"
+title = "city street at dawn"
+
+[[generated]]
+id = "Zyc6-2rikF4FyoydZtpVn"
+uri = "file://artifacts/hiko/public/images/post4.png"
+type = "image"
+title = "runner silhouette"

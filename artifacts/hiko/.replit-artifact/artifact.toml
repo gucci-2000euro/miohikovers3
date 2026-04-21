@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Hiko"
+version = "1.0.0"
+id = "artifacts/hiko"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 22265
+
+[services.development]
+run = "pnpm --filter @workspace/hiko run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/hiko", "run", "build" ]
+publicDir = "artifacts/hiko/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22265"
+BASE_PATH = "/"
