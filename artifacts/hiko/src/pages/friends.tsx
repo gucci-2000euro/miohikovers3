@@ -1,11 +1,17 @@
 import { useState } from 'react';
 import { useFriendsStore } from '@/store/useFriendsStore';
+import { useAuthStore } from '@/store/useAuthStore';
 import { ArrowLeft, UserPlus, Check, X } from 'lucide-react';
 import { Link } from 'wouter';
 
 export default function Friends() {
   const { friends, acceptRequest, rejectRequest, sendRequest } = useFriendsStore();
+  const requireAuth = useAuthStore(state => state.requireAuth);
   const [tab, setTab] = useState<'my' | 'requests' | 'suggested'>('my');
+
+  const gateAccept = (id: string) => requireAuth('Sign in to accept friend requests.', () => acceptRequest(id));
+  const gateReject = (id: string) => requireAuth('Sign in to manage friend requests.', () => rejectRequest(id));
+  const gateAdd = (id: string) => requireAuth('Sign in to add friends.', () => sendRequest(id));
 
   const getFiltered = () => {
     switch (tab) {
@@ -68,13 +74,13 @@ export default function Friends() {
                 {friend.status === 'request' && (
                   <>
                     <button 
-                      onClick={() => acceptRequest(friend.id)}
+                      onClick={() => gateAccept(friend.id)}
                       className="w-10 h-10 rounded-full bg-hiko-primary flex items-center justify-center text-hiko-deep hover:bg-hiko-primary/90 transition-colors"
                     >
                       <Check size={20} />
                     </button>
                     <button 
-                      onClick={() => rejectRequest(friend.id)}
+                      onClick={() => gateReject(friend.id)}
                       className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
                     >
                       <X size={20} />
@@ -83,7 +89,7 @@ export default function Friends() {
                 )}
                 {friend.status === 'suggested' && (
                   <button 
-                    onClick={() => sendRequest(friend.id)}
+                    onClick={() => gateAdd(friend.id)}
                     className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors text-sm font-medium"
                   >
                     <UserPlus size={16} /> Add

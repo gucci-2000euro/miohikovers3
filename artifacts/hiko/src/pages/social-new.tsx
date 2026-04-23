@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation } from 'wouter';
 import { useFeedStore } from '@/store/useFeedStore';
 import { useAuthStore } from '@/store/useAuthStore';
-import { ArrowLeft, Image as ImageIcon } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 
 const MOCK_IMAGES = [
   '/images/post1.png',
@@ -15,9 +15,17 @@ export default function SocialNew() {
   const [, setLocation] = useLocation();
   const { addPost } = useFeedStore();
   const user = useAuthStore(state => state.user);
+  const openAuthModal = useAuthStore(state => state.openAuthModal);
   
   const [selectedImage, setSelectedImage] = useState<string>(MOCK_IMAGES[0]);
   const [caption, setCaption] = useState('');
+
+  useEffect(() => {
+    if (!user) {
+      openAuthModal('Sign in to share your run.', () => {});
+      setLocation('/social');
+    }
+  }, [user, openAuthModal, setLocation]);
 
   const handlePublish = () => {
     if (!user) return;

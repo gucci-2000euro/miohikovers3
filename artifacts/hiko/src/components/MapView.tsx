@@ -2,15 +2,34 @@ import { useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Polyline, useMap } from "react-leaflet";
 import L from "leaflet";
 import { Route } from "@/store/useDataStore";
-import { motion } from "framer-motion";
 
 // Custom icons
-const createCustomIcon = (color: string, size: number = 24) => {
+const createDotIcon = (color: string, size: number = 24) => {
   return L.divIcon({
     className: "custom-leaflet-icon",
     html: `<div style="width: ${size}px; height: ${size}px; background-color: ${color}; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 10px ${color};"></div>`,
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
+  });
+};
+
+const createPinIcon = (color: string, size: number = 36) => {
+  const w = size;
+  const h = Math.round(size * 1.3);
+  const html = `
+    <div style="width:${w}px;height:${h}px;display:flex;align-items:flex-start;justify-content:center;filter:drop-shadow(0 4px 6px rgba(0,0,0,0.45));">
+      <svg width="${w}" height="${h}" viewBox="0 0 24 31" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 0C5.373 0 0 5.373 0 12c0 8.5 12 19 12 19s12-10.5 12-19C24 5.373 18.627 0 12 0z" fill="${color}"/>
+        <path d="M12 0C5.373 0 0 5.373 0 12c0 8.5 12 19 12 19s12-10.5 12-19C24 5.373 18.627 0 12 0z" fill="none" stroke="white" stroke-width="1.5" stroke-opacity="0.9"/>
+        <circle cx="12" cy="12" r="4.5" fill="white"/>
+      </svg>
+    </div>
+  `;
+  return L.divIcon({
+    className: "custom-leaflet-icon",
+    html,
+    iconSize: [w, h],
+    iconAnchor: [w / 2, h],
   });
 };
 
@@ -21,9 +40,8 @@ const userIcon = L.divIcon({
   iconAnchor: [12, 12],
 });
 
-const routeIcon = createCustomIcon("var(--color-hiko-primary)", 20);
-const challengeIcon = createCustomIcon("#FFB800", 24);
-const runnerIcon = createCustomIcon("rgba(255,255,255,0.8)", 16);
+const routeIcon = createPinIcon("#0ebc68", 36);
+const runnerIcon = createDotIcon("rgba(255,255,255,0.85)", 14);
 
 interface MapViewProps {
   center: [number, number];

@@ -17,33 +17,67 @@ interface User {
 
 interface AuthState {
   user: User | null;
+  authModalOpen: boolean;
+  authModalReason: string | null;
+  pendingAction: (() => void) | null;
   login: (email: string, name: string) => void;
   logout: () => void;
   updateProfile: (data: Partial<User>) => void;
+  openAuthModal: (reason?: string, onSuccess?: () => void) => void;
+  closeAuthModal: () => void;
+  requireAuth: (reason: string, action: () => void) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       user: null,
-      login: (email, name) => set({
-        user: {
-          id: 'u1',
-          name: name || 'Mara',
-          email,
-          avatar: 'https://i.pravatar.cc/150?u=u1',
-          level: 12,
-          title: 'Pathfinder',
-          totalKm: 428.5,
-          totalRuns: 64,
-          longestRun: 21.1,
-          currentStreak: 5,
-          weeklyAvg: 24.5
+      authModalOpen: false,
+      authModalReason: null,
+      pendingAction: null,
+      login: (email, name) => {
+        set({
+          user: {
+            id: 'u1',
+            name: name || 'Mara',
+            email,
+            avatar: 'https://i.pravatar.cc/150?u=u1',
+            level: 12,
+            title: 'Pathfinder',
+            totalKm: 428.5,
+            totalRuns: 64,
+            longestRun: 21.1,
+            currentStreak: 5,
+            weeklyAvg: 24.5
+          },
+          authModalOpen: false,
+          authModalReason: null
+        });
+        const pending = get().pendingAction;
+        if (pending) {
+          set({ pendingAction: null });
+          setTimeout(pending, 50);
         }
-      }),
+      },
       logout: () => set({ user: null }),
-      updateProfile: (data) => set((state) => ({ user: state.user ? { ...state.user, ...data } : null }))
+      updateProfile: (data) => set((state) => ({ user: state.user ? { ...state.user, ...data } : null })),
+      openAuthModal: (reason, onSuccess) => set({
+        authModalOpen: true,
+        authModalReason: reason ?? null,
+        pendingAction: onSuccess ?? null
+      }),
+      closeAuthModal: () => set({ authModalOpen: false, authModalReason: null, pendingAction: null }),
+      requireAuth: (reason, action) => {
+        if (get().user) {
+          action();
+        } else {
+          set({ authModalOpen: true, authModalReason: reason, pendingAction: action });
+        }
+      }
     }),
-    { name: 'hiko-auth' }
+    {
+      name: 'hiko-auth',
+      partialize: (state) => ({ user: state.user })
+    }
   )
 );

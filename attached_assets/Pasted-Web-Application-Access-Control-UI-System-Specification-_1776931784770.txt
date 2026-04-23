@@ -1,0 +1,266 @@
+Web Application Access Control & UI System Specification
+
+Overview
+
+This document defines the architectural and behavioral requirements for implementing controlled access flows, route protection, and visual consistency within a React-based web application developed on Replit. The primary objective is to enable unrestricted exploration of the application while enforcing authentication at the point of meaningful interaction.
+
+The system must balance user acquisition (low friction) with conversion (authentication gating) through a progressive access control model.
+
+1. Access Control Strategy (Progressive Gating Model)
+
+1.1 Conceptual Model
+
+The application must operate under a two-phase access paradigm:
+
+Exploration Phase (Unauthenticated Users)
+
+Users can navigate all primary routes
+
+Core UI components are visible
+
+Data may be partially mocked, anonymized, or read-only
+
+No destructive or persistent actions are allowed
+
+Interaction Phase (Authentication Required)
+
+Triggered when the user attempts any state-changing or personalized action
+
+Requires login or registration before proceeding
+
+This approach ensures high discoverability while protecting system integrity and user-specific data.
+
+1.2 Protected Interactions
+
+Authentication must be required for the following actions:
+
+Initiating a running session
+
+Accessing or interacting with the social feed
+
+Viewing or sending messages
+
+Managing friendships (add/remove/view details)
+
+Any operation involving user-specific state or backend persistence
+
+1.3 Technical Implementation
+
+Authentication Context
+
+Implement a centralized authentication state using React Context:
+
+interface AuthState {
+  isAuthenticated: boolean;
+  user: User | null;
+  loading: boolean;
+}
+Expose via a custom hook:
+
+const useAuth = () => useContext(AuthContext);
+Route Handling (React Router v6+)
+
+Use a hybrid routing model:
+
+Public routes (accessible to all)
+
+Conditionally protected interactions within those routes
+
+Fully protected routes where necessary
+
+Hard Protection Component
+
+const ProtectedRoute = ({ children }: { children: ReactNode }) => {
+  const { isAuthenticated } = useAuth();
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+};
+1.4 Interaction-Level Gating
+
+Instead of blocking entire pages, intercept user actions:
+
+const handleAction = () => {
+  if (!isAuthenticated) {
+    triggerAuthFlow(); // modal or redirect
+    return;
+  }
+
+  performAction();
+};
+Recommended Pattern
+
+Avoid immediate redirects on page access
+
+Trigger authentication only upon intentional interaction
+
+Preserve user context (e.g., redirect back after login)
+
+1.5 Authentication UX Flow
+
+Two acceptable patterns:
+
+Modal-based authentication (preferred for UX continuity):
+
+Non-intrusive overlay
+
+Maintains navigation context
+
+Faster conversion
+
+Redirect-based authentication:
+
+Use location.state.from to preserve navigation intent
+
+Redirect back post-login
+
+2. Map System and Location Markers
+
+2.1 Marker Design
+
+The application must use a location pin marker to represent running sessions on a map interface.
+
+Visual Characteristics
+
+Circular head (indicating exact position)
+
+Tapered pointer (geographical anchor)
+
+Clean, minimal silhouette consistent with modern UI systems
+
+2.2 Color System
+
+Marker color must align with the application’s existing Pantone-based color palette
+
+Ensure:
+
+High contrast against map backgrounds
+
+Accessibility compliance (WCAG contrast considerations)
+
+Interaction States
+
+Default: Base brand color
+
+Hover: Slight scale increase (≈1.1x) + subtle glow/shadow
+
+Active/Selected: Increased saturation or outlined emphasis
+
+2.3 Implementation Options
+
+SVG-based custom marker (recommended for flexibility)
+
+Map library integration (e.g., Leaflet, Mapbox, Google Maps)
+
+Example abstraction:
+
+<MapMarker
+  coordinates={latLng}
+  variant="run"
+  state="active"
+/>
+3. Branding and Logo Integration
+
+3.1 Placement
+
+Fixed position: top-left corner
+
+Integrated within the main navigation header
+
+3.2 Visual Specifications
+
+Color: #0ebc68
+
+Format: SVG (preferred for scalability and styling control)
+
+3.3 Rendering Strategy
+
+Inline SVG for dynamic styling (recommended)
+
+Fallback: converted .svg asset from original vector file
+
+3.4 Responsiveness
+
+Desktop: full-size logo
+
+Mobile: scaled-down version maintaining aspect ratio
+
+Ensure no layout shift or overlap with navigation elements
+
+4. Application Architecture
+
+4.1 Recommended Structure
+
+/src
+  /components        // reusable UI components
+  /pages             // route-level components
+  /routes            // routing logic and guards
+  /context           // global state (AuthContext)
+  /hooks             // custom hooks (useAuth, etc.)
+  /features          // domain modules (runs, social, map)
+4.2 Separation of Concerns
+
+Authentication logic must be isolated from UI components
+
+Route protection should be declarative, not embedded in business logic
+
+Feature modules should remain independently scalable
+
+5. UX and Performance Enhancements
+
+5.1 User Feedback
+
+Toast notifications for blocked actions
+
+Clear messaging: “Login required to continue”
+
+Avoid abrupt disruptions
+
+5.2 Loading States
+
+Skeleton UI for preview content
+
+Graceful fallback for unauthenticated data
+
+5.3 State Persistence
+
+Persist authentication state via:
+
+localStorage (client-side)
+
+secure cookies (if backend integrated)
+
+5.4 Code Optimization
+
+Lazy loading for route components (React.lazy)
+
+Code splitting for feature modules
+
+5.5 Analytics (Optional but Recommended)
+
+Track key metrics:
+
+Interaction attempts before login
+
+Conversion rate (guest → authenticated)
+
+Drop-off points in authentication flow
+
+6. Final Objective
+
+The system must deliver:
+
+A frictionless onboarding experience
+
+Immediate visibility of product value
+
+Controlled access to core functionality
+
+Strong visual consistency across map elements and branding
+
+Scalable and maintainable architecture
+
+The implementation should prioritize user engagement first, enforcing authentication only when it becomes contextually necessary.

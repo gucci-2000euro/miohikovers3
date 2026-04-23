@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useLocation } from 'wouter';
 import { motion } from 'framer-motion';
-import { Leaf } from 'lucide-react';
+import { Logo } from '@/components/Logo';
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -10,7 +10,12 @@ export default function Auth() {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const login = useAuthStore(state => state.login);
+  const user = useAuthStore(state => state.user);
   const [, setLocation] = useLocation();
+
+  useEffect(() => {
+    if (user) setLocation('/');
+  }, [user, setLocation]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,9 +34,7 @@ export default function Auth() {
         className="w-full max-w-md z-10"
       >
         <div className="flex flex-col items-center mb-12">
-          <div className="w-16 h-16 bg-primary/20 rounded-2xl flex items-center justify-center mb-4 border border-primary/30">
-            <Leaf className="text-primary w-8 h-8" />
-          </div>
+          <Logo size={72} className="mb-4" />
           <h1 className="text-4xl font-bold tracking-tight text-white mb-2">Hiko</h1>
           <p className="text-white/60 text-center">Your city in motion.</p>
         </div>

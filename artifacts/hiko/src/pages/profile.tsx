@@ -1,27 +1,54 @@
 import { useAuthStore } from '@/store/useAuthStore';
-import { Settings, LogOut, Award, Activity, Calendar } from 'lucide-react';
+import { Settings, LogOut, Award, Activity, Calendar, Mountain, Footprints, Sunrise } from 'lucide-react';
 import { useLocation } from 'wouter';
+import { Logo } from '@/components/Logo';
 
 export default function Profile() {
-  const { user, logout } = useAuthStore();
+  const { user, logout, openAuthModal } = useAuthStore();
   const [, setLocation] = useLocation();
-
-  if (!user) return null;
 
   const handleLogout = () => {
     logout();
-    setLocation('/auth');
+    setLocation('/');
   };
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-hiko-deep text-white pb-24 flex flex-col items-center justify-center px-6">
+        <Logo size={72} className="mb-6" />
+        <h2 className="text-2xl font-bold mb-2 text-center">Your runs, your story.</h2>
+        <p className="text-white/60 text-center mb-8 max-w-xs">
+          Sign in to track your runs, earn badges, and watch your stats grow.
+        </p>
+        <button
+          onClick={() => openAuthModal('Sign in to view your profile and stats.')}
+          className="bg-hiko-primary text-hiko-deep font-bold py-4 px-8 rounded-2xl hover:bg-hiko-primary/90 transition-colors"
+          data-testid="button-profile-signin"
+        >
+          Sign in or create account
+        </button>
+      </div>
+    );
+  }
+
+  const badges = [
+    { name: 'Dawn Patrol', Icon: Sunrise },
+    { name: '10K Crusher', Icon: Footprints },
+    { name: 'Trail Whisperer', Icon: Mountain },
+  ];
 
   return (
     <div className="min-h-screen bg-hiko-deep text-white pb-24 overflow-y-auto">
       {/* Header */}
       <div className="px-6 pt-12 pb-6 bg-gradient-to-b from-hiko-muted/30 to-transparent relative">
+        <div className="absolute top-6 left-6">
+          <Logo size={36} />
+        </div>
         <div className="absolute top-6 right-6 flex gap-3">
           <button className="p-2 glass-panel rounded-full hover:bg-white/20 transition-colors">
             <Settings size={20} />
           </button>
-          <button onClick={handleLogout} className="p-2 glass-panel rounded-full hover:bg-red-500/20 text-red-400 transition-colors">
+          <button onClick={handleLogout} className="p-2 glass-panel rounded-full hover:bg-red-500/20 text-red-400 transition-colors" data-testid="button-logout">
             <LogOut size={20} />
           </button>
         </div>
@@ -73,18 +100,14 @@ export default function Profile() {
             <Award size={20} className="text-hiko-primary" /> Earned Badges
           </h3>
           <div className="grid grid-cols-3 gap-4">
-            {[
-              { name: "Dawn Patrol", icon: "🌅" },
-              { name: "10K Crusher", icon: "👟" },
-              { name: "Trail Whisperer", icon: "🌲" }
-            ].map((badge, i) => (
+            {badges.map(({ name, Icon }, i) => (
               <div key={i} className="flex flex-col items-center">
                 <div className="w-16 h-16 bg-hiko-primary/10 border border-hiko-primary/30 rounded-2xl flex items-center justify-center mb-2 transform rotate-45">
-                  <div className="-rotate-45 text-2xl filter grayscale brightness-200 sepia hue-rotate-90 saturate-200">
-                    <Award size={28} className="text-hiko-primary drop-shadow-md" />
+                  <div className="-rotate-45">
+                    <Icon size={28} className="text-hiko-primary drop-shadow-md" />
                   </div>
                 </div>
-                <p className="text-[10px] text-center font-medium text-white/70 uppercase tracking-wide px-1">{badge.name}</p>
+                <p className="text-[10px] text-center font-medium text-white/70 uppercase tracking-wide px-1">{name}</p>
               </div>
             ))}
           </div>

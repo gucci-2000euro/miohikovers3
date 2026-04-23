@@ -1,5 +1,6 @@
 import { useLocation, useParams } from 'wouter';
 import { useDataStore } from '@/store/useDataStore';
+import { useAuthStore } from '@/store/useAuthStore';
 import { ArrowLeft, Play, Activity, Mountain, Clock, ChevronRight } from 'lucide-react';
 import MapView from '@/components/MapView';
 
@@ -7,6 +8,7 @@ export default function RouteDetail() {
   const { id } = useParams();
   const [, setLocation] = useLocation();
   const { routes } = useDataStore();
+  const requireAuth = useAuthStore(state => state.requireAuth);
   
   const route = routes.find(r => r.id === id);
 
@@ -63,7 +65,7 @@ export default function RouteDetail() {
         </div>
 
         <button 
-          onClick={() => setLocation(`/run/${route.id}`)}
+          onClick={() => requireAuth('Sign in to start tracking your run.', () => setLocation(`/run/${route.id}`))}
           className="w-full bg-hiko-primary text-hiko-deep font-bold py-4 rounded-2xl flex items-center justify-center gap-2 hover:bg-hiko-primary/90 transition-colors mb-8"
         >
           <Play size={20} className="fill-hiko-deep" />

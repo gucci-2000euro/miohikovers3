@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLocation, useParams } from 'wouter';
 import { useRunStore } from '@/store/useRunStore';
 import { useDataStore, Route } from '@/store/useDataStore';
+import { useAuthStore } from '@/store/useAuthStore';
 import MapView from '@/components/MapView';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Trophy, FastForward, Activity } from 'lucide-react';
@@ -24,6 +25,17 @@ export default function RunSession() {
   const [, setLocation] = useLocation();
   const { routes } = useDataStore();
   const { isTracking, elapsedTime, distance, currentPace, startRun, endRun, tick, updateMetrics } = useRunStore();
+  const user = useAuthStore(state => state.user);
+  const openAuthModal = useAuthStore(state => state.openAuthModal);
+
+  useEffect(() => {
+    if (!user) {
+      openAuthModal('Sign in to start tracking your run.', () => {
+        if (routeId) setLocation(`/run/${routeId}`);
+      });
+      setLocation('/');
+    }
+  }, [user, openAuthModal, setLocation, routeId]);
   
   const [route, setRoute] = useState<Route | null>(null);
   const [showEndModal, setShowEndModal] = useState(false);

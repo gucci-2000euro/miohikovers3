@@ -1,15 +1,34 @@
 import { useFeedStore } from '@/store/useFeedStore';
+import { useAuthStore } from '@/store/useAuthStore';
 import { Heart, MessageCircle, Plus, Users } from 'lucide-react';
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
 import { motion } from 'framer-motion';
+import { Logo } from '@/components/Logo';
 
 export default function Social() {
   const { posts, toggleLike } = useFeedStore();
+  const requireAuth = useAuthStore(state => state.requireAuth);
+  const [, setLocation] = useLocation();
+
+  const handleLike = (postId: string) => {
+    requireAuth('Sign in to like posts and join the community.', () => toggleLike(postId));
+  };
+
+  const handleComment = () => {
+    requireAuth('Sign in to comment on posts.', () => {});
+  };
+
+  const handleNew = () => {
+    requireAuth('Sign in to share your run.', () => setLocation('/social/new'));
+  };
 
   return (
     <div className="min-h-screen bg-hiko-deep text-white pb-24">
       <div className="sticky top-0 z-20 bg-hiko-deep/90 backdrop-blur-md px-6 py-4 flex justify-between items-center border-b border-white/10">
-        <h1 className="text-2xl font-bold">Feed</h1>
+        <div className="flex items-center gap-3">
+          <Logo size={28} />
+          <h1 className="text-2xl font-bold">Feed</h1>
+        </div>
         <Link href="/social/friends" className="p-2 glass-panel rounded-full hover:bg-white/20 transition-colors">
           <Users size={20} />
         </Link>
@@ -33,8 +52,9 @@ export default function Social() {
             <div className="p-4 pb-2">
               <div className="flex items-center gap-4 mb-3">
                 <button 
-                  onClick={() => toggleLike(post.id)}
+                  onClick={() => handleLike(post.id)}
                   className="flex items-center gap-1.5 transition-transform active:scale-90"
+                  data-testid={`button-like-${post.id}`}
                 >
                   <motion.div
                     animate={post.isLiked ? { scale: [1, 1.2, 1] } : {}}
@@ -46,7 +66,11 @@ export default function Social() {
                   </motion.div>
                   <span className="font-medium">{post.likes}</span>
                 </button>
-                <button className="flex items-center gap-1.5 text-white hover:text-white/80 transition-colors">
+                <button
+                  onClick={handleComment}
+                  className="flex items-center gap-1.5 text-white hover:text-white/80 transition-colors"
+                  data-testid={`button-comment-${post.id}`}
+                >
                   <MessageCircle size={24} />
                   <span className="font-medium">{post.comments.length}</span>
                 </button>
@@ -75,15 +99,15 @@ export default function Social() {
         ))}
       </div>
 
-      <Link href="/social/new">
-        <motion.button 
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="fixed bottom-28 right-6 w-14 h-14 bg-hiko-primary rounded-full flex items-center justify-center shadow-lg shadow-hiko-primary/20 z-30"
-        >
-          <Plus size={28} className="text-hiko-deep" />
-        </motion.button>
-      </Link>
+      <motion.button 
+        onClick={handleNew}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        className="fixed bottom-28 right-6 w-14 h-14 bg-hiko-primary rounded-full flex items-center justify-center shadow-lg shadow-hiko-primary/20 z-30"
+        data-testid="button-new-post"
+      >
+        <Plus size={28} className="text-hiko-deep" />
+      </motion.button>
     </div>
   );
 }

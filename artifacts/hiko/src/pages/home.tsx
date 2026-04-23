@@ -3,6 +3,7 @@ import { useLocation } from 'wouter';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useDataStore, Route } from '@/store/useDataStore';
 import MapView from '@/components/MapView';
+import { Logo } from '@/components/Logo';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LocateFixed, Play, Navigation, Users, Zap } from 'lucide-react';
 
@@ -11,6 +12,7 @@ const BARCELONA_CENTER: [number, number] = [41.3851, 2.1734];
 export default function Home() {
   const [, setLocation] = useLocation();
   const user = useAuthStore(state => state.user);
+  const requireAuth = useAuthStore(state => state.requireAuth);
   const { routes, runners } = useDataStore();
   
   const [selectedRoute, setSelectedRoute] = useState<Route | null>(null);
@@ -43,9 +45,10 @@ export default function Home() {
   };
 
   const handleStartRun = () => {
-    if (selectedRoute) {
+    if (!selectedRoute) return;
+    requireAuth('Sign in to start tracking your run.', () => {
       setLocation(`/run/${selectedRoute.id}`);
-    }
+    });
   };
 
   return (
@@ -64,13 +67,28 @@ export default function Home() {
 
       {/* Top Overlay */}
       <div className="absolute top-0 left-0 right-0 z-10 p-6 pt-12 flex justify-between items-start pointer-events-none">
-        <div className="glass-panel px-4 py-2 rounded-2xl pointer-events-auto">
-          <p className="text-sm text-white/80 font-medium">Good evening, <span className="text-white">{user?.name}</span></p>
+        <div className="glass-panel px-4 py-2 rounded-2xl pointer-events-auto flex items-center gap-3">
+          <Logo size={32} />
+          {user ? (
+            <p className="text-sm text-white/80 font-medium">Hi, <span className="text-white">{user.name}</span></p>
+          ) : (
+            <p className="text-sm text-white/80 font-medium">Explore Hiko</p>
+          )}
         </div>
-        <div className="glass-panel px-3 py-2 rounded-2xl flex items-center gap-2 pointer-events-auto">
-          <Zap size={16} className="text-hiko-primary fill-hiko-primary" />
-          <span className="text-sm font-bold text-white">{user?.currentStreak} Day</span>
-        </div>
+        {user ? (
+          <div className="glass-panel px-3 py-2 rounded-2xl flex items-center gap-2 pointer-events-auto">
+            <Zap size={16} className="text-hiko-primary fill-hiko-primary" />
+            <span className="text-sm font-bold text-white">{user.currentStreak} Day</span>
+          </div>
+        ) : (
+          <button
+            onClick={() => useAuthStore.getState().openAuthModal('Sign in to track your runs and join the community.')}
+            className="glass-panel px-4 py-2 rounded-2xl text-sm font-bold text-hiko-primary pointer-events-auto hover:bg-white/10 transition-colors"
+            data-testid="button-signin-top"
+          >
+            Sign in
+          </button>
+        )}
       </div>
 
       {/* Floating Action Button */}

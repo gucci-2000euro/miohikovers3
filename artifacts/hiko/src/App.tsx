@@ -4,9 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import { BottomNav } from "@/components/BottomNav";
-import { useAuthStore } from "@/store/useAuthStore";
-import { useLocation } from "wouter";
-import { useEffect } from "react";
+import { AuthModal } from "@/components/AuthModal";
 
 // Pages
 import Auth from "@/pages/auth";
@@ -22,50 +20,19 @@ import Profile from "@/pages/profile";
 
 const queryClient = new QueryClient();
 
-function AuthGuard({ children }: { children: React.ReactNode }) {
-  const user = useAuthStore(state => state.user);
-  const [location, setLocation] = useLocation();
-
-  useEffect(() => {
-    if (!user && location !== "/auth") {
-      setLocation("/auth");
-    }
-  }, [user, location, setLocation]);
-
-  return <>{children}</>;
-}
-
 function Router() {
   return (
     <Switch>
       <Route path="/auth" component={Auth} />
-      <Route path="/">
-        <AuthGuard><Home /></AuthGuard>
-      </Route>
-      <Route path="/routes">
-        <AuthGuard><RoutesList /></AuthGuard>
-      </Route>
-      <Route path="/routes/:id">
-        <AuthGuard><RouteDetail /></AuthGuard>
-      </Route>
-      <Route path="/challenges">
-        <AuthGuard><Challenges /></AuthGuard>
-      </Route>
-      <Route path="/social">
-        <AuthGuard><Social /></AuthGuard>
-      </Route>
-      <Route path="/social/new">
-        <AuthGuard><SocialNew /></AuthGuard>
-      </Route>
-      <Route path="/social/friends">
-        <AuthGuard><Friends /></AuthGuard>
-      </Route>
-      <Route path="/profile">
-        <AuthGuard><Profile /></AuthGuard>
-      </Route>
-      <Route path="/run/:routeId">
-        <AuthGuard><RunSession /></AuthGuard>
-      </Route>
+      <Route path="/" component={Home} />
+      <Route path="/routes" component={RoutesList} />
+      <Route path="/routes/:id" component={RouteDetail} />
+      <Route path="/challenges" component={Challenges} />
+      <Route path="/social" component={Social} />
+      <Route path="/social/new" component={SocialNew} />
+      <Route path="/social/friends" component={Friends} />
+      <Route path="/profile" component={Profile} />
+      <Route path="/run/:routeId" component={RunSession} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -79,6 +46,7 @@ function App() {
           <div className="min-h-[100dvh] w-full max-w-md mx-auto bg-hiko-deep relative overflow-hidden text-foreground">
             <Router />
             <BottomNav />
+            <AuthModal />
           </div>
         </WouterRouter>
         <Toaster />
