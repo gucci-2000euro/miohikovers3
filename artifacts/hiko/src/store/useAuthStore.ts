@@ -13,6 +13,9 @@ interface User {
   longestRun: number;
   currentStreak: number;
   weeklyAvg: number;
+  avgPace: number;       // seconds per km
+  weeklyCalories: number;
+  totalCalories: number;
 }
 
 interface AuthState {
@@ -48,7 +51,10 @@ export const useAuthStore = create<AuthState>()(
             totalRuns: 64,
             longestRun: 21.1,
             currentStreak: 5,
-            weeklyAvg: 24.5
+            weeklyAvg: 24.5,
+            avgPace: 330,        // 5:30 min/km in seconds
+            weeklyCalories: 1470,
+            totalCalories: 25710
           },
           authModalOpen: false,
           authModalReason: null

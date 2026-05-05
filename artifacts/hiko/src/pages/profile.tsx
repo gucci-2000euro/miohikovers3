@@ -1,7 +1,19 @@
 import { useAuthStore } from '@/store/useAuthStore';
-import { Settings, LogOut, Award, Activity, Calendar, Mountain, Footprints, Sunrise } from 'lucide-react';
+import { Settings, LogOut, Award, Activity, Calendar, Mountain, Footprints, Sunrise, Flame, Timer, TrendingUp, Zap } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { Logo } from '@/components/Logo';
+
+function formatPace(seconds: number) {
+  if (!seconds) return '0:00';
+  const m = Math.floor(seconds / 60);
+  const s = Math.round(seconds % 60);
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
+function formatCalories(n: number) {
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
+  return n.toString();
+}
 
 export default function Profile() {
   const { user, logout, openAuthModal } = useAuthStore();
@@ -37,6 +49,52 @@ export default function Profile() {
     { name: 'Trail Whisperer', Icon: Mountain },
   ];
 
+  const stats = [
+    {
+      label: 'Total Distance',
+      value: (user.totalKm ?? 0).toFixed(1),
+      unit: 'km',
+      Icon: Activity,
+    },
+    {
+      label: 'Total Runs',
+      value: (user.totalRuns ?? 0).toString(),
+      unit: 'runs',
+      Icon: Calendar,
+    },
+    {
+      label: 'Longest Run',
+      value: (user.longestRun ?? 0).toFixed(1),
+      unit: 'km',
+      Icon: TrendingUp,
+    },
+    {
+      label: 'Weekly Avg',
+      value: (user.weeklyAvg ?? 0).toFixed(1),
+      unit: 'km',
+      Icon: Zap,
+    },
+    {
+      label: 'Avg Pace',
+      value: formatPace(user.avgPace ?? 0),
+      unit: 'min/km',
+      Icon: Timer,
+    },
+    {
+      label: 'Calories This Week',
+      value: formatCalories(user.weeklyCalories ?? 0),
+      unit: 'kcal',
+      Icon: Flame,
+      accent: true,
+    },
+    {
+      label: 'Total Calories Burned',
+      value: formatCalories(user.totalCalories ?? 0),
+      unit: 'kcal total',
+      Icon: Flame,
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-hiko-deep text-white pb-24 overflow-y-auto">
       {/* Header */}
@@ -66,31 +124,33 @@ export default function Profile() {
       </div>
 
       <div className="px-6 space-y-6">
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="glass-panel p-4 rounded-2xl">
-            <div className="flex items-center gap-2 text-white/50 text-xs font-medium uppercase tracking-wider mb-2">
-              <Activity size={14} /> Total Distance
-            </div>
-            <p className="text-2xl font-bold">{user.totalKm} <span className="text-sm font-normal text-white/50">km</span></p>
-          </div>
-          <div className="glass-panel p-4 rounded-2xl">
-            <div className="flex items-center gap-2 text-white/50 text-xs font-medium uppercase tracking-wider mb-2">
-              <Calendar size={14} /> Total Runs
-            </div>
-            <p className="text-2xl font-bold">{user.totalRuns}</p>
-          </div>
-          <div className="glass-panel p-4 rounded-2xl">
-            <div className="flex items-center gap-2 text-white/50 text-xs font-medium uppercase tracking-wider mb-2">
-              Longest Run
-            </div>
-            <p className="text-xl font-bold">{user.longestRun} <span className="text-sm font-normal text-white/50">km</span></p>
-          </div>
-          <div className="glass-panel p-4 rounded-2xl">
-            <div className="flex items-center gap-2 text-white/50 text-xs font-medium uppercase tracking-wider mb-2">
-              Weekly Avg
-            </div>
-            <p className="text-xl font-bold">{user.weeklyAvg} <span className="text-sm font-normal text-white/50">km</span></p>
+
+        {/* Records grid — 2 columns, last item full-width if odd */}
+        <div>
+          <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+            <Activity size={20} className="text-hiko-primary" /> My Records
+          </h3>
+          <div className="grid grid-cols-2 gap-3">
+            {stats.map(({ label, value, unit, Icon, accent }, i) => {
+              const isLast = i === stats.length - 1;
+              const isOdd = stats.length % 2 !== 0;
+              const fullWidth = isLast && isOdd;
+              return (
+                <div
+                  key={label}
+                  className={`glass-panel p-4 rounded-2xl flex flex-col gap-1 ${fullWidth ? 'col-span-2' : ''} ${accent ? 'border border-hiko-primary/30 bg-hiko-primary/5' : ''}`}
+                >
+                  <div className="flex items-center gap-1.5 text-white/50 text-[11px] font-medium uppercase tracking-wider">
+                    <Icon size={12} className={accent ? 'text-hiko-primary' : ''} />
+                    {label}
+                  </div>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className={`text-2xl font-bold ${accent ? 'text-hiko-primary' : ''}`}>{value}</span>
+                    <span className="text-xs text-white/40">{unit}</span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
