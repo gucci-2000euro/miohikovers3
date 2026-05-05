@@ -82,7 +82,7 @@ export const useAuthStore = create<AuthState>()(
       }
     }),
     {
-      name: 'hiko-auth',
+      name: 'hiko-auth-v2',
       partialize: (state) => ({ user: state.user })
     }
   )
