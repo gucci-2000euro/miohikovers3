@@ -40,7 +40,12 @@ export default function Challenges() {
         </div>
       </div>
 
+      {/* TODO [BE]: popolare challenges via API — GET /api/challenges?userId=&type=community|personal
+          TODO [FE2]: integrare con TanStack Query; aggiungere accept/abandon challenge */}
       <div className="px-6 space-y-4">
+        {filtered.length === 0 && (
+          <p className="text-center text-white/40 text-sm py-12">No challenges available yet.</p>
+        )}
         {filtered.map((challenge, i) => (
           <motion.div
             key={challenge.id}

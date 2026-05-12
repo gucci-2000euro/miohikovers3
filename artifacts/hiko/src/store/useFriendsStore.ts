@@ -9,39 +9,6 @@ export interface Friend {
   status: 'friend' | 'request' | 'suggested' | 'pending';
 }
 
-const mockFriends: Friend[] = [
-  {
-    id: 'u2',
-    name: 'Alex Rivers',
-    avatar: 'https://i.pravatar.cc/150?u=u2',
-    weeklyKm: 34.5,
-    status: 'friend'
-  },
-  {
-    id: 'u3',
-    name: 'Elena Trail',
-    avatar: 'https://i.pravatar.cc/150?u=u3',
-    weeklyKm: 42.1,
-    status: 'friend'
-  },
-  {
-    id: 'u4',
-    name: 'David Urban',
-    avatar: 'https://i.pravatar.cc/150?u=u4',
-    weeklyKm: 28.0,
-    status: 'request',
-    mutualFriends: 3
-  },
-  {
-    id: 'u5',
-    name: 'Sarah Sprint',
-    avatar: 'https://i.pravatar.cc/150?u=u5',
-    weeklyKm: 15.2,
-    status: 'suggested',
-    mutualFriends: 12
-  }
-];
-
 interface FriendsState {
   friends: Friend[];
   acceptRequest: (id: string) => void;
@@ -49,15 +16,17 @@ interface FriendsState {
   sendRequest: (id: string) => void;
 }
 
+// TODO [BE]: popolare friends dall'API — GET /api/friends?userId=... (amici, richieste, suggeriti)
+// TODO [BE]: implementare endpoint accept/reject/send — POST /api/friends/:action
 export const useFriendsStore = create<FriendsState>((set) => ({
-  friends: mockFriends,
+  friends: [],
   acceptRequest: (id) => set((state) => ({
-    friends: state.friends.map(f => f.id === id ? { ...f, status: 'friend' } : f)
+    friends: state.friends.map(f => f.id === id ? { ...f, status: 'friend' } : f),
   })),
   rejectRequest: (id) => set((state) => ({
-    friends: state.friends.filter(f => f.id !== id)
+    friends: state.friends.filter(f => f.id !== id),
   })),
   sendRequest: (id) => set((state) => ({
-    friends: state.friends.map(f => f.id === id ? { ...f, status: 'pending' } : f)
-  }))
+    friends: state.friends.map(f => f.id === id ? { ...f, status: 'pending' } : f),
+  })),
 }));

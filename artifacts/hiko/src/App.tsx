@@ -19,6 +19,7 @@ import Friends from "@/pages/friends";
 import Profile from "@/pages/profile";
 import Messages from "@/pages/messages";
 import Chat from "@/pages/chat";
+import UIPreview from "@/components/UIPreview";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +38,7 @@ function Router() {
       <Route path="/messages/:userId" component={Chat} />
       <Route path="/profile" component={Profile} />
       <Route path="/run/:routeId" component={RunSession} />
+      <Route path="/preview" component={UIPreview} />
       <Route component={NotFound} />
     </Switch>
   );

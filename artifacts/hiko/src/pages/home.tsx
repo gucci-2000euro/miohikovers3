@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useLocation } from 'wouter';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useDataStore, Route } from '@/store/useDataStore';
@@ -16,21 +16,10 @@ export default function Home() {
   const { routes, runners } = useDataStore();
   
   const [selectedRoute, setSelectedRoute] = useState<Route | null>(null);
+  // TODO [FE1]: sostituire BARCELONA_CENTER con la posizione GPS reale via useGeolocation
   const [mapCenter, setMapCenter] = useState<[number, number]>(BARCELONA_CENTER);
   const [mapZoom, setMapZoom] = useState(14);
-  const [activeRunners, setActiveRunners] = useState(runners);
-
-  // Nudge runners slightly to make it feel alive
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveRunners(current => current.map(r => ({
-        ...r,
-        lat: r.lat + (Math.random() - 0.5) * 0.0005,
-        lng: r.lng + (Math.random() - 0.5) * 0.0005
-      })));
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
+  // TODO [FE1]: runners arriveranno da Supabase Realtime (posizioni GPS live degli utenti attivi)
 
   const handleRouteClick = (route: Route) => {
     setSelectedRoute(route);
@@ -59,7 +48,7 @@ export default function Home() {
           center={mapCenter} 
           zoom={mapZoom} 
           routes={routes} 
-          runners={activeRunners}
+          runners={runners}
           userPos={BARCELONA_CENTER}
           onRouteClick={handleRouteClick}
         />

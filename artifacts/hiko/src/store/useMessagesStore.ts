@@ -37,38 +37,6 @@ interface MessagesState {
   totalUnread: () => number;
 }
 
-const now = Date.now();
-const mockConversations: Conversation[] = [
-  {
-    id: 'conv-u2',
-    participantId: 'u2',
-    participantName: 'Alex Rivers',
-    participantAvatar: 'https://i.pravatar.cc/150?u=u2',
-    lastMessage: 'Great run today! See you tomorrow?',
-    lastMessageTime: new Date(now - 3600000).toISOString(),
-    unreadCount: 2
-  },
-  {
-    id: 'conv-u3',
-    participantId: 'u3',
-    participantName: 'Elena Trail',
-    participantAvatar: 'https://i.pravatar.cc/150?u=u3',
-    lastMessage: 'The northern ridge is insane right now 🔥',
-    lastMessageTime: new Date(now - 86400000).toISOString(),
-    unreadCount: 0
-  }
-];
-
-const mockMessages: Message[] = [
-  { id: 'm1', conversationId: 'conv-u2', senderId: 'u2', senderName: 'Alex Rivers', senderAvatar: 'https://i.pravatar.cc/150?u=u2', text: 'Hey! Are you running this weekend?', timestamp: new Date(now - 7200000).toISOString(), read: true },
-  { id: 'm2', conversationId: 'conv-u2', senderId: 'u1', senderName: 'Me', senderAvatar: 'https://i.pravatar.cc/150?u=u1', text: 'Yes! Planning to hit the coastal route Saturday morning.', timestamp: new Date(now - 7000000).toISOString(), read: true },
-  { id: 'm3', conversationId: 'conv-u2', senderId: 'u2', senderName: 'Alex Rivers', senderAvatar: 'https://i.pravatar.cc/150?u=u2', text: 'Perfect. I might join. What time?', timestamp: new Date(now - 5400000).toISOString(), read: true },
-  { id: 'm4', conversationId: 'conv-u2', senderId: 'u2', senderName: 'Alex Rivers', senderAvatar: 'https://i.pravatar.cc/150?u=u2', text: 'Great run today! See you tomorrow?', timestamp: new Date(now - 3600000).toISOString(), read: false },
-  { id: 'm5', conversationId: 'conv-u3', senderId: 'u3', senderName: 'Elena Trail', senderAvatar: 'https://i.pravatar.cc/150?u=u3', text: 'Just got back from the northern ridge. It was incredible!', timestamp: new Date(now - 90000000).toISOString(), read: true },
-  { id: 'm6', conversationId: 'conv-u3', senderId: 'u1', senderName: 'Me', senderAvatar: 'https://i.pravatar.cc/150?u=u1', text: 'I saw your post! Looked amazing. Trail conditions good?', timestamp: new Date(now - 88000000).toISOString(), read: true },
-  { id: 'm7', conversationId: 'conv-u3', senderId: 'u3', senderName: 'Elena Trail', senderAvatar: 'https://i.pravatar.cc/150?u=u3', text: 'The northern ridge is insane right now 🔥', timestamp: new Date(now - 86400000).toISOString(), read: true },
-];
-
 function formatConversationTime(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
   const m = Math.floor(diff / 60000);
@@ -86,11 +54,15 @@ function formatMessageTime(iso: string): string {
 }
 export { formatMessageTime };
 
+// TODO [BE]: caricare conversazioni dall'API — GET /api/conversations?userId=...
+// TODO [BE]: caricare messaggi per conversazione — GET /api/messages?conversationId=...
+// TODO [BE]: implementare invio messaggio reale — POST /api/messages
+// TODO [BE]: usare Supabase Realtime per ricevere nuovi messaggi in tempo reale
 export const useMessagesStore = create<MessagesState>()(
   persist(
     (set, get) => ({
-      conversations: mockConversations,
-      messages: mockMessages,
+      conversations: [],
+      messages: [],
       getConversation: (participantId) =>
         get().conversations.find(c => c.participantId === participantId),
       getMessages: (conversationId) =>
@@ -104,7 +76,7 @@ export const useMessagesStore = create<MessagesState>()(
           senderAvatar,
           text,
           timestamp: new Date().toISOString(),
-          read: true
+          read: true,
         };
         set(s => ({
           messages: [...s.messages, msg],
@@ -112,45 +84,13 @@ export const useMessagesStore = create<MessagesState>()(
             c.id === conversationId
               ? { ...c, lastMessage: text, lastMessageTime: msg.timestamp, unreadCount: 0 }
               : c
-          )
+          ),
         }));
-
-        // Simulate a reply after 2-4 seconds
-        const conv = get().conversations.find(c => c.id === conversationId);
-        if (conv) {
-          const replies = [
-            'Nice one!',
-            'Sounds good, I\'ll be there!',
-            'Let\'s go!',
-            'Can\'t wait!',
-            'That route is amazing.',
-            'See you out there!'
-          ];
-          setTimeout(() => {
-            const reply: Message = {
-              id: `m${Date.now()}`,
-              conversationId,
-              senderId: conv.participantId,
-              senderName: conv.participantName,
-              senderAvatar: conv.participantAvatar,
-              text: replies[Math.floor(Math.random() * replies.length)],
-              timestamp: new Date().toISOString(),
-              read: false
-            };
-            set(s => ({
-              messages: [...s.messages, reply],
-              conversations: s.conversations.map(c =>
-                c.id === conversationId
-                  ? { ...c, lastMessage: reply.text, lastMessageTime: reply.timestamp, unreadCount: c.unreadCount + 1 }
-                  : c
-              )
-            }));
-          }, 2000 + Math.random() * 2000);
-        }
+        // TODO [BE]: qui va la chiamata API per persistere il messaggio e notificare il destinatario
       },
       markRead: (conversationId) => set(s => ({
         messages: s.messages.map(m => m.conversationId === conversationId ? { ...m, read: true } : m),
-        conversations: s.conversations.map(c => c.id === conversationId ? { ...c, unreadCount: 0 } : c)
+        conversations: s.conversations.map(c => c.id === conversationId ? { ...c, unreadCount: 0 } : c),
       })),
       startConversation: (participant) => {
         const existing = get().conversations.find(c => c.participantId === participant.id);
@@ -163,12 +103,12 @@ export const useMessagesStore = create<MessagesState>()(
           participantAvatar: participant.avatar,
           lastMessage: '',
           lastMessageTime: new Date().toISOString(),
-          unreadCount: 0
+          unreadCount: 0,
         };
         set(s => ({ conversations: [conv, ...s.conversations] }));
         return id;
       },
-      totalUnread: () => get().conversations.reduce((acc, c) => acc + c.unreadCount, 0)
+      totalUnread: () => get().conversations.reduce((acc, c) => acc + c.unreadCount, 0),
     }),
     { name: 'hiko-messages' }
   )

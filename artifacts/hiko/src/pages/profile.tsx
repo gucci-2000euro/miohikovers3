@@ -1,5 +1,5 @@
 import { useAuthStore } from '@/store/useAuthStore';
-import { Settings, LogOut, Award, Activity, Calendar, Mountain, Footprints, Sunrise, Flame, Timer, TrendingUp, Zap } from 'lucide-react';
+import { Settings, LogOut, Award, Activity, Calendar, Flame, Timer, TrendingUp, Zap } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { Logo } from '@/components/Logo';
 
@@ -42,12 +42,6 @@ export default function Profile() {
       </div>
     );
   }
-
-  const badges = [
-    { name: 'Dawn Patrol', Icon: Sunrise },
-    { name: '10K Crusher', Icon: Footprints },
-    { name: 'Trail Whisperer', Icon: Mountain },
-  ];
 
   const stats = [
     {
@@ -155,46 +149,21 @@ export default function Profile() {
         </div>
 
         {/* Badges Section */}
+        {/* TODO [BE]: fornire array badge guadagnati — GET /api/badges?userId=...
+            TODO [FE2]: mappare qui i badge reali; finché non arrivano mostrare sezione vuota o nascosta */}
         <div>
           <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
             <Award size={20} className="text-hiko-primary" /> Earned Badges
           </h3>
-          <div className="grid grid-cols-3 gap-4">
-            {badges.map(({ name, Icon }, i) => (
-              <div key={i} className="flex flex-col items-center">
-                <div className="w-16 h-16 bg-hiko-primary/10 border border-hiko-primary/30 rounded-2xl flex items-center justify-center mb-2 transform rotate-45">
-                  <div className="-rotate-45">
-                    <Icon size={28} className="text-hiko-primary drop-shadow-md" />
-                  </div>
-                </div>
-                <p className="text-[10px] text-center font-medium text-white/70 uppercase tracking-wide px-1">{name}</p>
-              </div>
-            ))}
-          </div>
+          <p className="text-sm text-white/40 text-center py-6">No badges yet — complete challenges to earn them.</p>
         </div>
 
         {/* Recent Activities */}
+        {/* TODO [BE]: esporre storico corse — GET /api/runs?userId=&limit=5 (già presente via saveRun)
+            TODO [FE2]: usare useRuns hook (TanStack Query) e mappare qui le ultime corse */}
         <div>
           <h3 className="text-lg font-bold mb-4">Recent Activities</h3>
-          <div className="space-y-3">
-            {[1, 2, 3].map((_, i) => (
-              <div key={i} className="glass-panel p-4 rounded-xl flex justify-between items-center">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center">
-                    <Activity size={18} className="text-white/70" />
-                  </div>
-                  <div>
-                    <p className="font-bold text-sm">Evening Run</p>
-                    <p className="text-xs text-white/50">{i === 0 ? 'Today' : `${i} days ago`}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="font-bold text-sm">{5 + i}.2 km</p>
-                  <p className="text-xs text-white/50">{(25 + i * 2)}:00</p>
-                </div>
-              </div>
-            ))}
-          </div>
+          <p className="text-sm text-white/40 text-center py-6">No runs recorded yet.</p>
         </div>
       </div>
     </div>

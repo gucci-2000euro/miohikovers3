@@ -21,13 +21,6 @@ interface CommentsState {
   deleteComment: (commentId: string) => void;
 }
 
-const mockComments: Comment[] = [
-  { id: 'c1', postId: 'p1', userId: 'u2', userName: 'Alex Rivers', userAvatar: 'https://i.pravatar.cc/150?u=u2', text: 'Beautiful shot!', createdAt: new Date(Date.now() - 7200000).toISOString() },
-  { id: 'c2', postId: 'p1', userId: 'u3', userName: 'Elena Trail', userAvatar: 'https://i.pravatar.cc/150?u=u3', text: 'Pace looks solid. What shoes?', createdAt: new Date(Date.now() - 5400000).toISOString() },
-  { id: 'c3', postId: 'p2', userId: 'u2', userName: 'Alex Rivers', userAvatar: 'https://i.pravatar.cc/150?u=u2', text: 'Need to try this route!', createdAt: new Date(Date.now() - 18000000).toISOString() },
-  { id: 'c4', postId: 'p2', userId: 'u4', userName: 'David Urban', userAvatar: 'https://i.pravatar.cc/150?u=u4', text: 'Northern ridge is incredible in fall.', createdAt: new Date(Date.now() - 14400000).toISOString() },
-];
-
 function formatRelative(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
   const m = Math.floor(diff / 60000);
@@ -39,10 +32,12 @@ function formatRelative(iso: string): string {
 }
 export { formatRelative };
 
+// TODO [BE]: caricare commenti per post — GET /api/comments?postId=...
+// TODO [FE2]: sostituire persist locale con fetch dal server; il persist attuale è solo per uso offline
 export const useCommentsStore = create<CommentsState>()(
   persist(
     (set, get) => ({
-      comments: mockComments,
+      comments: [],
       getByPost: (postId) => get().comments.filter(c => c.postId === postId),
       addComment: (postId, userId, userName, userAvatar, text) => {
         const comment: Comment = {
@@ -59,10 +54,10 @@ export const useCommentsStore = create<CommentsState>()(
       editComment: (commentId, text) => set(s => ({
         comments: s.comments.map(c =>
           c.id === commentId ? { ...c, text: text.trim(), editedAt: new Date().toISOString() } : c
-        )
+        ),
       })),
       deleteComment: (commentId) => set(s => ({
-        comments: s.comments.filter(c => c.id !== commentId)
+        comments: s.comments.filter(c => c.id !== commentId),
       })),
     }),
     { name: 'hiko-comments' }

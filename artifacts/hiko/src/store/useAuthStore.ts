@@ -39,14 +39,16 @@ export const useAuthStore = create<AuthState>()(
       authModalReason: null,
       pendingAction: null,
       login: (email, name) => {
+        // TODO [BE]: dopo il login, chiamare GET /api/profile?userId=... per caricare
+        // level, title, avatar e tutte le statistiche reali dell'utente
         set({
           user: {
             id: 'u1',
-            name: name || 'Mara',
+            name: name || '',
             email,
-            avatar: 'https://i.pravatar.cc/150?u=u1',
-            level: 12,
-            title: 'Pathfinder',
+            avatar: '',        // TODO [BE]: URL avatar dal profilo utente
+            level: 1,          // TODO [BE]: livello reale calcolato dal punteggio
+            title: '',         // TODO [BE]: titolo reale in base al livello
             totalKm: 0,
             totalRuns: 0,
             longestRun: 0,
@@ -54,7 +56,7 @@ export const useAuthStore = create<AuthState>()(
             weeklyAvg: 0,
             avgPace: 0,
             weeklyCalories: 0,
-            totalCalories: 0
+            totalCalories: 0,
           },
           authModalOpen: false,
           authModalReason: null
