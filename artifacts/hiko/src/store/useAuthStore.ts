@@ -52,6 +52,14 @@ function buildUser(id: string, email: string, name: string): User {
   };
 }
 
+async function fetchProfile(id: string, email: string, fallbackName: string): Promise<User> {
+  const { data } = await supabase.from('profiles').select('nome, avatar_url').eq('id', id).maybeSingle();
+  return {
+    ...buildUser(id, email, data?.nome ?? fallbackName),
+    avatar: data?.avatar_url ?? '',
+  };
+}
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
@@ -71,14 +79,16 @@ export const useAuthStore = create<AuthState>()(
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
           const u = session.user;
-          const name = u.user_metadata?.name ?? u.email?.split('@')[0] ?? '';
-          set({ user: buildUser(u.id, u.email ?? '', name) });
+          const fallback = u.user_metadata?.name ?? u.email?.split('@')[0] ?? '';
+          const user = await fetchProfile(u.id, u.email ?? '', fallback);
+          set({ user });
         }
-        supabase.auth.onAuthStateChange((_event, session) => {
+        supabase.auth.onAuthStateChange(async (_event, session) => {
           if (session?.user) {
             const u = session.user;
-            const name = u.user_metadata?.name ?? u.email?.split('@')[0] ?? '';
-            set({ user: buildUser(u.id, u.email ?? '', name) });
+            const fallback = u.user_metadata?.name ?? u.email?.split('@')[0] ?? '';
+            const user = await fetchProfile(u.id, u.email ?? '', fallback);
+            set({ user });
           } else {
             set({ user: null });
           }
@@ -95,11 +105,8 @@ export const useAuthStore = create<AuthState>()(
           });
           if (error) return error.message;
           if (data.user) {
-            set({
-              user: buildUser(data.user.id, email, name),
-              authModalOpen: false,
-              authModalReason: null,
-            });
+            const user = await fetchProfile(data.user.id, email, name);
+            set({ user, authModalOpen: false, authModalReason: null });
             const pending = get().pendingAction;
             if (pending) { set({ pendingAction: null }); setTimeout(pending, 50); }
           }
@@ -109,12 +116,9 @@ export const useAuthStore = create<AuthState>()(
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) return error.message;
         if (data.user) {
-          const displayName = data.user.user_metadata?.name ?? email.split('@')[0];
-          set({
-            user: buildUser(data.user.id, email, displayName),
-            authModalOpen: false,
-            authModalReason: null,
-          });
+          const fallback = data.user.user_metadata?.name ?? email.split('@')[0];
+          const user = await fetchProfile(data.user.id, email, fallback);
+          set({ user, authModalOpen: false, authModalReason: null });
           const pending = get().pendingAction;
           if (pending) { set({ pendingAction: null }); setTimeout(pending, 50); }
         }
@@ -126,8 +130,18 @@ export const useAuthStore = create<AuthState>()(
         set({ user: null });
       },
 
-      updateProfile: (data) =>
-        set((state) => ({ user: state.user ? { ...state.user, ...data } : null })),
+      updateProfile: (data) => {
+        set((state) => ({ user: state.user ? { ...state.user, ...data } : null }));
+        const user = get().user;
+        if (user && (data.avatar !== undefined || data.name !== undefined)) {
+          supabase.from('profiles').upsert({
+            id: user.id,
+            nome: data.name ?? user.name,
+            avatar_url: data.avatar ?? user.avatar,
+            updated_at: new Date().toISOString(),
+          }).then(() => {});
+        }
+      },
 
       openAuthModal: (reason, onSuccess) =>
         set({ authModalOpen: true, authModalReason: reason ?? null, pendingAction: onSuccess ?? null }),

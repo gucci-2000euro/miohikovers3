@@ -1,18 +1,18 @@
 import { useEffect, useState } from 'react';
 import { useLocation } from 'wouter';
-import { useFeedStore } from '@/store/useFeedStore';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useImageUpload } from '@/hooks/useImageUpload';
+import { supabase } from '@/lib/supabase';
 import { ArrowLeft, ImagePlus, X, Loader2 } from 'lucide-react';
 
 export default function SocialNew() {
   const [, setLocation] = useLocation();
-  const { addPost } = useFeedStore();
   const user = useAuthStore(state => state.user);
   const openAuthModal = useAuthStore(state => state.openAuthModal);
   const imgUpload = useImageUpload('post-images');
 
   const [caption, setCaption] = useState('');
+  const [publishing, setPublishing] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -21,17 +21,16 @@ export default function SocialNew() {
     }
   }, [user, openAuthModal, setLocation]);
 
-  const handlePublish = () => {
-    if (!user) return;
-    addPost({
-      userId: user.id,
-      userName: user.name,
-      userAvatar: user.avatar,
-      timeAgo: 'Just now',
-      imageUrl: imgUpload.preview ?? '',
-      caption,
+  const handlePublish = async () => {
+    if (!user || !caption.trim()) return;
+    setPublishing(true);
+    const { error } = await supabase.from('posts').insert({
+      user_id: user.id,
+      caption: caption.trim(),
+      image_url: imgUpload.preview ?? null,
     });
-    setLocation('/social');
+    setPublishing(false);
+    if (!error) setLocation('/social');
   };
 
   return (
@@ -45,9 +44,10 @@ export default function SocialNew() {
         </div>
         <button
           onClick={handlePublish}
-          disabled={!caption.trim()}
-          className="text-hiko-primary font-bold disabled:opacity-50 transition-opacity"
+          disabled={!caption.trim() || publishing}
+          className="text-hiko-primary font-bold disabled:opacity-50 transition-opacity flex items-center gap-1.5"
         >
+          {publishing ? <Loader2 size={16} className="animate-spin" /> : null}
           Publish
         </button>
       </div>
