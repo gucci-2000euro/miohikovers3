@@ -59,6 +59,7 @@ interface MapViewProps {
   onRouteClick?: (route: Route) => void;
   interactive?: boolean;
   showRouteEndpoints?: boolean;
+  children?: React.ReactNode;
 }
 
 function MapUpdater({ center, zoom }: { center: [number, number]; zoom?: number }) {
@@ -91,6 +92,7 @@ export default function MapView({
   onRouteClick,
   interactive = true,
   showRouteEndpoints = false,
+  children,
 }: MapViewProps) {
   const waypoints = activeRoute?.waypoints as [number, number][] | undefined;
 
@@ -169,6 +171,8 @@ export default function MapView({
       {/* User position — smooth follow during run */}
       {userPos && !interactive && <UserMarker pos={userPos} />}
       {userPos && interactive && <Marker position={userPos} icon={userIcon} />}
+
+      {children}
     </MapContainer>
   );
 }

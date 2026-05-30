@@ -1,11 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useDataStore, Route } from '@/store/useDataStore';
 import MapView from '@/components/MapView';
+import UserLocationMarker from '@/components/UserLocationMarker';
+import { useGeolocation } from '@/hooks/useGeolocation';
 import { Logo } from '@/components/Logo';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LocateFixed, Play, Navigation, Users, Zap } from 'lucide-react';
+import { LocateFixed, Play, Navigation, Users, Zap, MapPin, X } from 'lucide-react';
+
+const LOCATION_PREF_KEY = 'hiko_location_consent';
 
 const BARCELONA_CENTER: [number, number] = [41.3851, 2.1734];
 
@@ -16,7 +20,62 @@ export default function Home() {
   const { routes, runners } = useDataStore();
   
   const [selectedRoute, setSelectedRoute] = useState<Route | null>(null);
-  // TODO [FE1]: sostituire BARCELONA_CENTER con la posizione GPS reale via useGeolocation
+  const [locationConsent, setLocationConsent] = useState<'granted' | 'denied' | null>(null);
+  const [showLocationPrompt, setShowLocationPrompt] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem(LOCATION_PREF_KEY);
+    if (saved === 'denied') {
+      setLocationConsent('denied');
+      return;
+    }
+
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const showPrompt = () => { timer = setTimeout(() => setShowLocationPrompt(true), 800); };
+
+    if (navigator.permissions) {
+      navigator.permissions.query({ name: 'geolocation' }).then(result => {
+        if (result.state === 'granted') {
+          setLocationConsent('granted');
+          localStorage.setItem(LOCATION_PREF_KEY, 'granted');
+        } else if (result.state === 'denied') {
+          setLocationConsent('denied');
+          localStorage.setItem(LOCATION_PREF_KEY, 'denied');
+        } else {
+          showPrompt();
+        }
+      });
+    } else if (saved === 'granted') {
+      setLocationConsent('granted');
+    } else {
+      showPrompt();
+    }
+
+    return () => { if (timer) clearTimeout(timer); };
+  }, []);
+
+  const handleAllowLocation = () => {
+    localStorage.setItem(LOCATION_PREF_KEY, 'granted');
+    setLocationConsent('granted');
+    setShowLocationPrompt(false);
+  };
+
+  const handleDenyLocation = () => {
+    localStorage.setItem(LOCATION_PREF_KEY, 'denied');
+    setLocationConsent('denied');
+    setShowLocationPrompt(false);
+  };
+
+  const { pos: geoPos, error: geoError } = useGeolocation(locationConsent === 'granted');
+
+  // Se il browser blocca il permesso, resetta e mostra il prompt con avviso
+  useEffect(() => {
+    if (geoError === 'denied') {
+      localStorage.removeItem(LOCATION_PREF_KEY);
+      setLocationConsent(null);
+      setShowLocationPrompt(true);
+    }
+  }, [geoError]);
   const [mapCenter, setMapCenter] = useState<[number, number]>(BARCELONA_CENTER);
   const [mapZoom, setMapZoom] = useState(14);
   // TODO [FE1]: runners arriveranno da Supabase Realtime (posizioni GPS live degli utenti attivi)
@@ -29,7 +88,7 @@ export default function Home() {
 
   const handleCenterUser = () => {
     setSelectedRoute(null);
-    setMapCenter(BARCELONA_CENTER);
+    setMapCenter(geoPos ?? BARCELONA_CENTER);
     setMapZoom(14);
   };
 
@@ -44,14 +103,15 @@ export default function Home() {
     <div className="relative w-full h-screen overflow-hidden bg-hiko-deep">
       {/* Map Background */}
       <div className="absolute inset-0 z-0">
-        <MapView 
-          center={mapCenter} 
-          zoom={mapZoom} 
-          routes={routes} 
+        <MapView
+          center={mapCenter}
+          zoom={mapZoom}
+          routes={routes}
           runners={runners}
-          userPos={BARCELONA_CENTER}
           onRouteClick={handleRouteClick}
-        />
+        >
+          <UserLocationMarker pos={geoPos} />
+        </MapView>
       </div>
 
       {/* Top Overlay */}
@@ -89,6 +149,66 @@ export default function Home() {
           <LocateFixed size={24} />
         </button>
       </div>
+
+      {/* Location Permission Prompt */}
+      <AnimatePresence>
+        {showLocationPrompt && (
+          <motion.div
+            initial={{ y: 80, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 80, opacity: 0 }}
+            transition={{ type: 'spring', damping: 22, stiffness: 180 }}
+            className="absolute bottom-28 left-4 right-4 z-40 glass-panel rounded-2xl p-4"
+          >
+            <button
+              onClick={handleDenyLocation}
+              className="absolute top-3 right-3 text-white/40 hover:text-white/80 transition-colors"
+            >
+              <X size={16} />
+            </button>
+            <div className="flex items-start gap-3">
+              <div className="bg-hiko-primary/20 rounded-xl p-2 mt-0.5 shrink-0">
+                <MapPin size={20} className="text-hiko-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                {geoError === 'denied' ? (
+                  <>
+                    <p className="text-white font-semibold text-sm mb-0.5">Posizione bloccata dal browser</p>
+                    <p className="text-white/60 text-xs mb-3">
+                      Abilita la posizione nelle impostazioni del browser per questo sito, poi riprova.
+                    </p>
+                    <button
+                      onClick={handleDenyLocation}
+                      className="w-full bg-white/10 text-white/70 text-xs font-medium py-2 rounded-xl hover:bg-white/20 transition-colors"
+                    >
+                      OK, capito
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-white font-semibold text-sm mb-0.5">Attiva la posizione in tempo reale</p>
+                    <p className="text-white/60 text-xs mb-3">Vedrai la tua posizione sulla mappa e potrai centrare il percorso su di te.</p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleAllowLocation}
+                        className="flex-1 bg-hiko-primary text-hiko-deep text-xs font-bold py-2 rounded-xl hover:bg-hiko-primary/90 transition-colors"
+                      >
+                        Attiva
+                      </button>
+                      <button
+                        onClick={handleDenyLocation}
+                        className="flex-1 bg-white/10 text-white/70 text-xs font-medium py-2 rounded-xl hover:bg-white/20 transition-colors"
+                      >
+                        Non ora
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Route Bottom Sheet */}
       <AnimatePresence>

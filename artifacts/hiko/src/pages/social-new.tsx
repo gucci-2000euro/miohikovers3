@@ -2,22 +2,16 @@ import { useEffect, useState } from 'react';
 import { useLocation } from 'wouter';
 import { useFeedStore } from '@/store/useFeedStore';
 import { useAuthStore } from '@/store/useAuthStore';
-import { ArrowLeft } from 'lucide-react';
-
-const MOCK_IMAGES = [
-  '/images/post1.png',
-  '/images/post2.png',
-  '/images/post3.png',
-  '/images/post4.png'
-];
+import { useImageUpload } from '@/hooks/useImageUpload';
+import { ArrowLeft, ImagePlus, X, Loader2 } from 'lucide-react';
 
 export default function SocialNew() {
   const [, setLocation] = useLocation();
   const { addPost } = useFeedStore();
   const user = useAuthStore(state => state.user);
   const openAuthModal = useAuthStore(state => state.openAuthModal);
-  
-  const [selectedImage, setSelectedImage] = useState<string>(MOCK_IMAGES[0]);
+  const imgUpload = useImageUpload('post-images');
+
   const [caption, setCaption] = useState('');
 
   useEffect(() => {
@@ -34,8 +28,8 @@ export default function SocialNew() {
       userName: user.name,
       userAvatar: user.avatar,
       timeAgo: 'Just now',
-      imageUrl: selectedImage,
-      caption
+      imageUrl: imgUpload.preview ?? '',
+      caption,
     });
     setLocation('/social');
   };
@@ -49,7 +43,7 @@ export default function SocialNew() {
           </button>
           <h1 className="text-xl font-bold">New Post</h1>
         </div>
-        <button 
+        <button
           onClick={handlePublish}
           disabled={!caption.trim()}
           className="text-hiko-primary font-bold disabled:opacity-50 transition-opacity"
@@ -59,23 +53,49 @@ export default function SocialNew() {
       </div>
 
       <div className="p-6">
-        <div className="w-full aspect-[4/3] rounded-2xl overflow-hidden mb-4 bg-black/40 border border-white/10">
-          <img src={selectedImage} alt="Selected" className="w-full h-full object-cover" />
-        </div>
-        
-        <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-none">
-          {MOCK_IMAGES.map(img => (
-            <button 
-              key={img} 
-              onClick={() => setSelectedImage(img)}
-              className={`w-20 h-20 shrink-0 rounded-xl overflow-hidden border-2 transition-colors ${selectedImage === img ? 'border-hiko-primary' : 'border-transparent'}`}
-            >
-              <img src={img} alt="Thumb" className="w-full h-full object-cover" />
-            </button>
-          ))}
-        </div>
+        <input
+          ref={imgUpload.inputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          className="hidden"
+          onChange={async (e) => {
+            const file = e.target.files?.[0];
+            if (!file || !user) return;
+            await imgUpload.handleFile(file, user.id);
+          }}
+        />
 
-        <div className="glass-panel rounded-2xl p-4 mt-2">
+        {/* Foto selezionata o area di upload */}
+        {imgUpload.preview ? (
+          <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden mb-4 bg-black/40 border border-white/10">
+            <img src={imgUpload.preview} alt="Post" className="w-full h-full object-cover" />
+            <button
+              onClick={() => imgUpload.setPreview(null)}
+              className="absolute top-2 right-2 bg-black/60 text-white p-1.5 rounded-full hover:bg-black/80"
+            >
+              <X size={16} />
+            </button>
+            <button
+              onClick={imgUpload.open}
+              className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 hover:bg-black/80"
+            >
+              <ImagePlus size={14} /> Cambia
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={imgUpload.open}
+            disabled={imgUpload.uploading}
+            className="w-full aspect-[4/3] rounded-2xl border-2 border-dashed border-white/20 flex flex-col items-center justify-center gap-3 text-white/40 hover:border-hiko-primary/40 hover:text-white/60 transition-colors mb-4"
+          >
+            {imgUpload.uploading
+              ? <Loader2 size={36} className="animate-spin" />
+              : <><ImagePlus size={36} /><span className="text-sm">Aggiungi una foto dal dispositivo</span></>
+            }
+          </button>
+        )}
+
+        <div className="glass-panel rounded-2xl p-4">
           <textarea
             value={caption}
             onChange={(e) => setCaption(e.target.value)}

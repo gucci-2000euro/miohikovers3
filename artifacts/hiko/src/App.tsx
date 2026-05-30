@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -5,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import { BottomNav } from "@/components/BottomNav";
 import { AuthModal } from "@/components/AuthModal";
+import { useAuthStore } from "@/store/useAuthStore";
 
 // Pages
 import Auth from "@/pages/auth";
@@ -20,6 +22,11 @@ import Profile from "@/pages/profile";
 import Messages from "@/pages/messages";
 import Chat from "@/pages/chat";
 import UIPreview from "@/components/UIPreview";
+import CommunityList from "@/pages/community/index";
+import CommunityHub from "@/pages/community/[id]";
+import ChannelView from "@/pages/community/channel";
+import CreateCommunity from "@/pages/community/create";
+import CommunityAdmin from "@/pages/community/admin";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +45,10 @@ function Router() {
       <Route path="/messages/:userId" component={Chat} />
       <Route path="/profile" component={Profile} />
       <Route path="/run/:routeId" component={RunSession} />
+      <Route path="/community/create" component={CreateCommunity} />
+      <Route path="/community/:id/admin" component={CommunityAdmin} />
+      <Route path="/community/:id/channel/:channelId" component={ChannelView} />
+      <Route path="/community/:id" component={CommunityHub} />
       <Route path="/preview" component={UIPreview} />
       <Route component={NotFound} />
     </Switch>
@@ -45,6 +56,9 @@ function Router() {
 }
 
 function App() {
+  const init = useAuthStore((s) => s.init);
+  useEffect(() => { init(); }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>

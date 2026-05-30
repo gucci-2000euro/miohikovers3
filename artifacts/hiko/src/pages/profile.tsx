@@ -1,7 +1,9 @@
+import { useRef } from 'react';
 import { useAuthStore } from '@/store/useAuthStore';
-import { Settings, LogOut, Award, Activity, Calendar, Flame, Timer, TrendingUp, Zap } from 'lucide-react';
+import { Settings, LogOut, Award, Activity, Calendar, Flame, Timer, TrendingUp, Zap, Camera } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { Logo } from '@/components/Logo';
+import { useImageUpload } from '@/hooks/useImageUpload';
 
 function formatPace(seconds: number) {
   if (!seconds) return '0:00';
@@ -16,8 +18,9 @@ function formatCalories(n: number) {
 }
 
 export default function Profile() {
-  const { user, logout, openAuthModal } = useAuthStore();
+  const { user, logout, openAuthModal, updateProfile } = useAuthStore();
   const [, setLocation] = useLocation();
+  const avatarUpload = useImageUpload('avatars');
 
   const handleLogout = () => {
     logout();
@@ -107,7 +110,27 @@ export default function Profile() {
 
         <div className="flex flex-col items-center mt-6">
           <div className="relative mb-4">
-            <img src={user.avatar} alt={user.name} className="w-24 h-24 rounded-full object-cover border-2 border-hiko-primary p-1" />
+            <input
+              ref={avatarUpload.inputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="hidden"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file || !user) return;
+                const url = await avatarUpload.handleFile(file, user.id);
+                if (url) updateProfile({ avatar: url });
+              }}
+            />
+            <button onClick={avatarUpload.open} className="relative group">
+              {user.avatar
+                ? <img src={user.avatar} alt={user.name} className="w-24 h-24 rounded-full object-cover border-2 border-hiko-primary p-1" />
+                : <div className="w-24 h-24 rounded-full bg-hiko-primary/20 border-2 border-hiko-primary p-1 flex items-center justify-center text-hiko-primary text-3xl font-bold">{user.name[0]?.toUpperCase()}</div>
+              }
+              <div className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <Camera size={22} className="text-white" />
+              </div>
+            </button>
             <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-hiko-primary text-hiko-deep text-xs font-bold px-3 py-1 rounded-full shadow-lg">
               Lv {user.level}
             </div>

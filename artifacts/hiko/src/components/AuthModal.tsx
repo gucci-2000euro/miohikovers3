@@ -10,10 +10,16 @@ export function AuthModal() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    login(email, isLogin ? 'Mara' : name);
+    setError(null);
+    setLoading(true);
+    const err = await login(email, password, isLogin ? undefined : name);
+    setLoading(false);
+    if (err) setError(err);
   };
 
   return (
@@ -61,14 +67,14 @@ export function AuthModal() {
                   <button
                     type="button"
                     className={`flex-1 pb-2 text-sm font-medium transition-colors border-b-2 ${isLogin ? 'border-hiko-primary text-white' : 'border-transparent text-white/50'}`}
-                    onClick={() => setIsLogin(true)}
+                    onClick={() => { setIsLogin(true); setError(null); }}
                   >
                     Login
                   </button>
                   <button
                     type="button"
                     className={`flex-1 pb-2 text-sm font-medium transition-colors border-b-2 ${!isLogin ? 'border-hiko-primary text-white' : 'border-transparent text-white/50'}`}
-                    onClick={() => setIsLogin(false)}
+                    onClick={() => { setIsLogin(false); setError(null); }}
                   >
                     Sign Up
                   </button>
@@ -101,12 +107,17 @@ export function AuthModal() {
                   placeholder="Password"
                 />
 
+                {error && (
+                  <p className="text-red-400 text-sm text-center">{error}</p>
+                )}
+
                 <button
                   type="submit"
-                  className="w-full bg-hiko-primary hover:bg-hiko-primary/90 text-hiko-deep font-bold rounded-xl px-4 py-3 transition-all transform active:scale-[0.98] mt-2"
+                  disabled={loading}
+                  className="w-full bg-hiko-primary hover:bg-hiko-primary/90 disabled:opacity-60 text-hiko-deep font-bold rounded-xl px-4 py-3 transition-all transform active:scale-[0.98] mt-2"
                   data-testid="auth-modal-submit"
                 >
-                  {isLogin ? 'Enter' : 'Join'}
+                  {loading ? '...' : isLogin ? 'Enter' : 'Join'}
                 </button>
 
                 <button

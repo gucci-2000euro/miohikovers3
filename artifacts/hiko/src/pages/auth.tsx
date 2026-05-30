@@ -17,9 +17,16 @@ export default function Auth() {
     if (user) setLocation('/');
   }, [user, setLocation]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    login(email, isLogin ? 'Mara' : name);
+    setError(null);
+    setLoading(true);
+    const err = await login(email, password, isLogin ? undefined : name);
+    setLoading(false);
+    if (err) { setError(err); return; }
     setLocation('/');
   };
 
@@ -95,11 +102,14 @@ export default function Auth() {
             />
           </div>
 
-          <button 
+          {error && <p className="text-red-400 text-sm text-center">{error}</p>}
+
+          <button
             type="submit"
-            className="w-full bg-primary hover:bg-primary/90 text-hiko-deep font-semibold rounded-xl px-4 py-3 transition-all transform active:scale-[0.98]"
+            disabled={loading}
+            className="w-full bg-primary hover:bg-primary/90 disabled:opacity-60 text-hiko-deep font-semibold rounded-xl px-4 py-3 transition-all transform active:scale-[0.98]"
           >
-            {isLogin ? 'Enter' : 'Join'}
+            {loading ? '...' : isLogin ? 'Enter' : 'Join'}
           </button>
         </form>
       </motion.div>

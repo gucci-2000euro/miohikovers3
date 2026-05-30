@@ -3,11 +3,17 @@ import { useFeedStore } from '@/store/useFeedStore';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useCommentsStore } from '@/store/useCommentsStore';
 import { useMessagesStore } from '@/store/useMessagesStore';
-import { Heart, MessageCircle, Plus, Users, MessageSquare } from 'lucide-react';
+import { Heart, MessageCircle, Plus, Users, MessageSquare, Search, Loader2 } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import { motion } from 'framer-motion';
 import { Logo } from '@/components/Logo';
 import { CommentsSheet } from '@/components/CommentsSheet';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
+import { CommunityCard } from '@/components/community/CommunityCard';
+import type { Community } from '@/types/index';
+
+type Tab = 'feed' | 'community';
 
 export default function Social() {
   const { posts, toggleLike } = useFeedStore();
@@ -17,7 +23,21 @@ export default function Social() {
   const { getByPost } = useCommentsStore();
   const totalUnread = useMessagesStore(s => s.totalUnread());
 
+  const [tab, setTab] = useState<Tab>('feed');
   const [commentPostId, setCommentPostId] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+
+  const { data: communities = [], isLoading: loadingCommunities } = useQuery<Community[]>({
+    queryKey: ['communities', search],
+    queryFn: async () => {
+      let q = supabase.from('communities').select('*').order('membri_count', { ascending: false });
+      if (search) q = q.ilike('nome', `%${search}%`);
+      const { data } = await q.limit(30);
+      return (data ?? []) as Community[];
+    },
+    enabled: tab === 'community',
+    staleTime: 30_000,
+  });
 
   const handleLike = (postId: string) => {
     requireAuth('Sign in to like posts and join the community.', () => toggleLike(postId));
@@ -31,33 +51,84 @@ export default function Social() {
     requireAuth('Sign in to share your run.', () => setLocation('/social/new'));
   };
 
+  const handleJoin = (c: Community) => {
+    requireAuth('Accedi per unirti a una community.', () => setLocation(`/community/${c.id}`));
+  };
+
   return (
     <div className="min-h-screen bg-hiko-deep text-white pb-24">
-      <div className="sticky top-0 z-20 bg-hiko-deep/90 backdrop-blur-md px-6 py-4 flex justify-between items-center border-b border-white/10">
-        <div className="flex items-center gap-3">
-          <Logo size={28} />
-          <h1 className="text-2xl font-bold">Feed</h1>
+      {/* Header */}
+      <div className="sticky top-0 z-20 bg-hiko-deep/90 backdrop-blur-md px-6 py-4 border-b border-white/10">
+        <div className="flex justify-between items-center mb-3">
+          <div className="flex items-center gap-3">
+            <Logo size={28} />
+            <h1 className="text-2xl font-bold">Social</h1>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={tab === 'feed'
+                ? handleNew
+                : () => requireAuth('Accedi per creare una community.', () => setLocation('/community/create'))
+              }
+              className="p-2 glass-panel rounded-full hover:bg-white/20 transition-colors"
+            >
+              <Plus size={20} />
+            </button>
+            <button
+              onClick={() => requireAuth('Sign in to message runners.', () => setLocation('/messages'))}
+              className="p-2 glass-panel rounded-full hover:bg-white/20 transition-colors relative"
+              data-testid="header-messages"
+            >
+              <MessageSquare size={20} />
+              {user && totalUnread > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-hiko-primary rounded-full text-[9px] font-bold text-hiko-deep flex items-center justify-center">
+                  {totalUnread}
+                </span>
+              )}
+            </button>
+            <Link href="/social/friends" className="p-2 glass-panel rounded-full hover:bg-white/20 transition-colors">
+              <Users size={20} />
+            </Link>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
+
+        {/* Toggle Feed / Community */}
+        <div className="flex bg-white/5 rounded-xl p-1">
           <button
-            onClick={() => requireAuth('Sign in to message runners.', () => setLocation('/messages'))}
-            className="p-2 glass-panel rounded-full hover:bg-white/20 transition-colors relative"
-            data-testid="header-messages"
+            onClick={() => setTab('feed')}
+            className={`flex-1 py-1.5 text-sm font-semibold rounded-lg transition-colors ${
+              tab === 'feed' ? 'bg-hiko-primary text-hiko-deep' : 'text-white/50 hover:text-white'
+            }`}
           >
-            <MessageSquare size={20} />
-            {user && totalUnread > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-hiko-primary rounded-full text-[9px] font-bold text-hiko-deep flex items-center justify-center">
-                {totalUnread}
-              </span>
-            )}
+            Feed
           </button>
-          <Link href="/social/friends" className="p-2 glass-panel rounded-full hover:bg-white/20 transition-colors">
-            <Users size={20} />
-          </Link>
+          <button
+            onClick={() => setTab('community')}
+            className={`flex-1 py-1.5 text-sm font-semibold rounded-lg transition-colors ${
+              tab === 'community' ? 'bg-hiko-primary text-hiko-deep' : 'text-white/50 hover:text-white'
+            }`}
+          >
+            Community
+          </button>
         </div>
+
+        {/* Search bar (solo in tab community) */}
+        {tab === 'community' && (
+          <div className="relative mt-2">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Cerca community..."
+              className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-hiko-primary/50"
+            />
+          </div>
+        )}
       </div>
 
-      <div className="space-y-6 pt-4">
+      {/* ── FEED ─────────────────────────────────────── */}
+      {tab === 'feed' && (
+        <div className="space-y-6 pt-4">
         {posts.map((post) => {
           const comments = getByPost(post.id);
           return (
@@ -126,17 +197,34 @@ export default function Social() {
             </div>
           );
         })}
-      </div>
+        </div>
+      )}
 
-      <motion.button
-        onClick={handleNew}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        className="fixed bottom-28 right-6 w-14 h-14 bg-hiko-primary rounded-full flex items-center justify-center shadow-lg shadow-hiko-primary/20 z-30"
-        data-testid="new-post"
-      >
-        <Plus size={28} className="text-hiko-deep" />
-      </motion.button>
+      {/* ── COMMUNITY ─────────────────────────────────── */}
+      {tab === 'community' && (
+        <div className="px-4 pt-4">
+          {loadingCommunities ? (
+            <div className="flex justify-center py-16">
+              <Loader2 size={32} className="text-hiko-primary animate-spin" />
+            </div>
+          ) : communities.length === 0 ? (
+            <div className="text-center py-16 text-white/40">
+              <p className="text-lg mb-1">Nessuna community trovata</p>
+              <p className="text-sm">Creane una con il + in alto!</p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {communities.map(c => (
+                <CommunityCard
+                  key={c.id}
+                  community={c}
+                  onJoin={() => handleJoin(c)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <CommentsSheet
         postId={commentPostId ?? ''}
