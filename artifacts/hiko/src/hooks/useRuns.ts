@@ -55,6 +55,7 @@ export function useSaveRun() {
       totalRuns: (user.totalRuns ?? 0) + 1,
     });
     queryClient.invalidateQueries({ queryKey: ['runs', user.id] });
+    queryClient.invalidateQueries({ queryKey: ['user-challenges', user.id] });
     return { ok: true, error: null };
   };
 }
