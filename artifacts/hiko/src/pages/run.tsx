@@ -7,6 +7,8 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { useSaveRun } from '@/hooks/useRuns';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import MapView from '@/components/MapView';
+import { MapStyleButton } from '@/components/MapStyleButton';
+import { useMapIsDark, mapPanel } from '@/store/useMapStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, Trophy, FastForward, Activity, Navigation,
@@ -34,6 +36,7 @@ export default function RunSession() {
   const user = useAuthStore(s => s.user);
   const openAuthModal = useAuthStore(s => s.openAuthModal);
   const saveRun = useSaveRun();
+  const isDark = useMapIsDark();
 
   const [route, setRoute] = useState<Route | null>(null);
   const [phase, setPhase] = useState<Phase>('ready');
@@ -166,31 +169,32 @@ export default function RunSession() {
         {/* Back button */}
         <button
           onClick={() => setLocation('/routes')}
-          className="absolute top-12 left-4 z-10 glass-panel p-3 rounded-full hover:bg-white/20 transition-colors"
+          className={`absolute top-12 left-4 z-10 ${mapPanel(isDark)} p-3 rounded-full hover:bg-white/10 transition-colors`}
         >
           <X size={22} />
         </button>
 
-        {/* GPS status */}
-        <div className="absolute top-12 right-4 z-10">
+        {/* GPS status + stile mappa */}
+        <div className="absolute top-12 right-4 z-10 flex flex-col items-end gap-2">
           {geoPos ? (
-            <div className="glass-panel px-3 py-2 rounded-full flex items-center gap-2 text-hiko-primary text-xs font-bold">
+            <div className={`${mapPanel(isDark)} px-3 py-2 rounded-full flex items-center gap-2 text-hiko-primary text-xs font-bold`}>
               <MapPin size={13} /> GPS OK
             </div>
           ) : geoError ? (
-            <div className="glass-panel px-3 py-2 rounded-full text-red-400 text-xs font-bold">
+            <div className={`${mapPanel(isDark)} px-3 py-2 rounded-full text-red-400 text-xs font-bold`}>
               GPS non disponibile
             </div>
           ) : (
-            <div className="glass-panel px-3 py-2 rounded-full text-white/50 text-xs flex items-center gap-2">
+            <div className={`${mapPanel(isDark)} px-3 py-2 rounded-full text-white/50 text-xs flex items-center gap-2`}>
               <Loader2 size={13} className="animate-spin" /> Acquisizione GPS…
             </div>
           )}
+          <MapStyleButton isDark={isDark} />
         </div>
 
         {/* Card percorso + START */}
         <div className="absolute bottom-0 left-0 right-0 z-10 p-6 pb-10 bg-gradient-to-t from-hiko-deep via-hiko-deep/90 to-transparent">
-          <div className="glass-panel rounded-3xl p-5 mb-4 border border-white/10">
+          <div className={`${mapPanel(isDark)} rounded-3xl p-5 mb-4`}>
             <h2 className="text-lg font-bold mb-1">{route.name}</h2>
             <div className="flex items-center gap-4 text-sm text-white/60 mb-4">
               <span>{route.distance} km</span>
@@ -237,13 +241,16 @@ export default function RunSession() {
       <div className="absolute top-0 left-0 right-0 z-10 p-4 pt-12 flex justify-between items-center pointer-events-none">
         <button
           onClick={() => setShowEndModal(true)}
-          className="glass-panel p-3 rounded-full text-white hover:bg-white/20 transition-colors pointer-events-auto"
+          className={`${mapPanel(isDark)} p-3 rounded-full text-white hover:bg-white/10 transition-colors pointer-events-auto`}
         >
           <X size={22} />
         </button>
-        <div className="glass-panel px-4 py-2 rounded-full flex items-center gap-2 pointer-events-auto">
-          <div className="w-2 h-2 rounded-full bg-hiko-primary animate-pulse" />
-          <span className="text-sm font-bold text-hiko-primary tracking-wider">LIVE</span>
+        <div className="flex items-center gap-2 pointer-events-auto">
+          <div className={`${mapPanel(isDark)} px-4 py-2 rounded-full flex items-center gap-2`}>
+            <div className="w-2 h-2 rounded-full bg-hiko-primary animate-pulse" />
+            <span className="text-sm font-bold text-hiko-primary tracking-wider">LIVE</span>
+          </div>
+          <MapStyleButton isDark={isDark} />
         </div>
       </div>
 
@@ -253,7 +260,7 @@ export default function RunSession() {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="glass-panel rounded-2xl px-4 py-3 flex items-center gap-4"
+            className={`${mapPanel(isDark)} rounded-2xl px-4 py-3 flex items-center gap-4`}
           >
             <div
               className="w-11 h-11 rounded-full bg-hiko-primary/20 border border-hiko-primary/40 flex items-center justify-center flex-shrink-0"
@@ -284,7 +291,7 @@ export default function RunSession() {
       {/* No GPS warning */}
       {!userPos && (
         <div className="absolute top-28 left-4 right-4 z-10">
-          <div className="glass-panel rounded-2xl px-4 py-3 flex items-center gap-3 border border-yellow-500/30">
+          <div className={`${mapPanel(isDark)} rounded-2xl px-4 py-3 flex items-center gap-3 border border-yellow-500/30`}>
             <Loader2 size={18} className="text-yellow-400 animate-spin flex-shrink-0" />
             <p className="text-sm text-yellow-300">In attesa del segnale GPS…</p>
           </div>

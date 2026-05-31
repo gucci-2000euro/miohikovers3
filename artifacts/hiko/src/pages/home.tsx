@@ -9,6 +9,8 @@ import { useGeolocation } from '@/hooks/useGeolocation';
 import { Logo } from '@/components/Logo';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LocateFixed, Play, Navigation, Users, Zap, MapPin, X } from 'lucide-react';
+import { MapStyleButton } from '@/components/MapStyleButton';
+import { useMapIsDark, mapPanel } from '@/store/useMapStore';
 
 const LOCATION_PREF_KEY = 'hiko_location_consent';
 
@@ -20,6 +22,7 @@ export default function Home() {
   const requireAuth = useAuthStore(state => state.requireAuth);
   const { runners } = useDataStore();
   const { data: routes = [] } = useRoutes();
+  const isDark = useMapIsDark();
   
   const [selectedRoute, setSelectedRoute] = useState<Route | null>(null);
   const [locationConsent, setLocationConsent] = useState<'granted' | 'denied' | null>(null);
@@ -118,7 +121,7 @@ export default function Home() {
 
       {/* Top Overlay */}
       <div className="absolute top-0 left-0 right-0 z-10 p-6 pt-12 flex justify-between items-start pointer-events-none">
-        <div className="glass-panel px-4 py-2 rounded-2xl pointer-events-auto flex items-center gap-3">
+        <div className={`${mapPanel(isDark)} px-4 py-2 rounded-2xl pointer-events-auto flex items-center gap-3`}>
           <Logo size={32} />
           {user ? (
             <p className="text-sm text-white/80 font-medium">Hi, <span className="text-white">{user.name}</span></p>
@@ -127,14 +130,14 @@ export default function Home() {
           )}
         </div>
         {user ? (
-          <div className="glass-panel px-3 py-2 rounded-2xl flex items-center gap-2 pointer-events-auto">
+          <div className={`${mapPanel(isDark)} px-3 py-2 rounded-2xl flex items-center gap-2 pointer-events-auto`}>
             <Zap size={16} className="text-hiko-primary fill-hiko-primary" />
             <span className="text-sm font-bold text-white">{user.currentStreak} Day</span>
           </div>
         ) : (
           <button
             onClick={() => useAuthStore.getState().openAuthModal('Sign in to track your runs and join the community.')}
-            className="glass-panel px-4 py-2 rounded-2xl text-sm font-bold text-hiko-primary pointer-events-auto hover:bg-white/10 transition-colors"
+            className={`${mapPanel(isDark)} px-4 py-2 rounded-2xl text-sm font-bold text-hiko-primary pointer-events-auto hover:bg-white/10 transition-colors`}
             data-testid="button-signin-top"
           >
             Sign in
@@ -142,14 +145,15 @@ export default function Home() {
         )}
       </div>
 
-      {/* Floating Action Button */}
-      <div className="absolute top-32 right-6 z-10 pointer-events-auto">
-        <button 
+      {/* FAB destra: localizza + cambia stile mappa */}
+      <div className="absolute top-32 right-6 z-10 pointer-events-auto flex flex-col gap-2">
+        <button
           onClick={handleCenterUser}
-          className="glass-panel p-3 rounded-full text-white hover:text-hiko-primary transition-colors"
+          className={`${mapPanel(isDark)} p-3 rounded-full text-white hover:text-hiko-primary transition-colors`}
         >
           <LocateFixed size={24} />
         </button>
+        <MapStyleButton isDark={isDark} />
       </div>
 
       {/* Location Permission Prompt */}

@@ -3,12 +3,15 @@ import { useRoutes } from '@/hooks/useRoutes';
 import { useAuthStore } from '@/store/useAuthStore';
 import { ArrowLeft, Play, Activity, Mountain, Clock, ChevronRight } from 'lucide-react';
 import MapView from '@/components/MapView';
+import { MapStyleButton } from '@/components/MapStyleButton';
+import { useMapIsDark, mapPanel } from '@/store/useMapStore';
 
 export default function RouteDetail() {
   const { id } = useParams();
   const [, setLocation] = useLocation();
   const { data: routes = [] } = useRoutes();
   const requireAuth = useAuthStore(state => state.requireAuth);
+  const isDark = useMapIsDark();
 
   const route = routes.find(r => r.id === id);
 
@@ -18,12 +21,13 @@ export default function RouteDetail() {
     <div className="min-h-screen bg-hiko-deep text-white pb-24 overflow-y-auto">
       {/* Hero Map Preview */}
       <div className="h-64 relative">
-        <button 
+        <button
           onClick={() => setLocation('/routes')}
-          className="absolute top-12 left-4 z-20 glass-panel p-2 rounded-full hover:bg-white/20 transition-colors"
+          className={`absolute top-12 left-4 z-20 ${mapPanel(isDark)} p-2 rounded-full hover:bg-white/10 transition-colors`}
         >
           <ArrowLeft size={24} />
         </button>
+        <MapStyleButton isDark={isDark} className="absolute top-12 right-4 z-20" />
         <div className="absolute inset-0 z-0">
           <MapView 
             center={route.center} 

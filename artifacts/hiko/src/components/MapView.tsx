@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Polyline, CircleMarker, useMap } from "react-leaflet";
 import L from "leaflet";
 import { Route } from "@/store/useDataStore";
+import { useMapStore, getMapStyle } from "@/store/useMapStore";
 
 // Custom icons
 const createDotIcon = (color: string, size: number = 24) => {
@@ -82,6 +83,7 @@ function UserMarker({ pos }: { pos: [number, number] }) {
   return <Marker position={pos} icon={userIcon} />;
 }
 
+
 export default function MapView({
   center,
   zoom = 14,
@@ -94,6 +96,8 @@ export default function MapView({
   showRouteEndpoints = false,
   children,
 }: MapViewProps) {
+  const styleId = useMapStore(s => s.styleId);
+  const style = getMapStyle(styleId);
   const waypoints = activeRoute?.waypoints as [number, number][] | undefined;
 
   return (
@@ -105,11 +109,13 @@ export default function MapView({
       touchZoom={interactive}
       scrollWheelZoom={interactive}
       doubleClickZoom={interactive}
-      className="w-full h-full bg-[#0a0a0a]"
+      style={{ background: style.bg }}
+      className="w-full h-full"
     >
       <TileLayer
-        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+        key={style.id}
+        url={style.url}
+        attribution={style.attribution}
       />
 
       <MapUpdater center={center} zoom={zoom} />
@@ -127,20 +133,8 @@ export default function MapView({
       {/* Active run route — glow underlay + main line */}
       {activeRoute && waypoints && waypoints.length > 1 && (
         <>
-          <Polyline
-            positions={waypoints}
-            color="#0ebc68"
-            weight={12}
-            opacity={0.18}
-          />
-          <Polyline
-            positions={waypoints}
-            color="#0ebc68"
-            weight={4}
-            opacity={0.9}
-            dashArray={undefined}
-          />
-          {/* Waypoint dots along route */}
+          <Polyline positions={waypoints} color="#0ebc68" weight={12} opacity={0.18} />
+          <Polyline positions={waypoints} color="#0ebc68" weight={4} opacity={0.9} />
           {waypoints.slice(1, -1).map((wp, i) => (
             <CircleMarker
               key={i}
@@ -149,7 +143,6 @@ export default function MapView({
               pathOptions={{ color: '#0ebc68', fillColor: '#fff', fillOpacity: 1, weight: 2 }}
             />
           ))}
-          {/* Start & finish markers */}
           {showRouteEndpoints && (
             <>
               <Marker position={waypoints[0]} icon={startIcon} />
@@ -161,14 +154,10 @@ export default function MapView({
 
       {/* Other runners */}
       {runners.map(runner => (
-        <Marker
-          key={runner.id}
-          position={[runner.lat, runner.lng]}
-          icon={runnerIcon}
-        />
+        <Marker key={runner.id} position={[runner.lat, runner.lng]} icon={runnerIcon} />
       ))}
 
-      {/* User position — smooth follow during run */}
+      {/* User position */}
       {userPos && !interactive && <UserMarker pos={userPos} />}
       {userPos && interactive && <Marker position={userPos} icon={userIcon} />}
 
