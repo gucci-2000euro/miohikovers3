@@ -85,6 +85,50 @@ export function checkBlacklist(text: string): ModerationResult | null {
   return flaggedResult;
 }
 
+/**
+ * Controlla SOLO le parole già completate (seguite da separatore).
+ * Usa match esatto sul singolo termine — NO sottostringa, NO fuzzy/Levenshtein —
+ * per evitare falsi positivi durante la digitazione.
+ * Le frasi multi-parola vengono cercate come sottostringa nel testo normalizzato
+ * completo (es. "figlio di puttana" viene trovata solo se intera).
+ */
+export function checkCompletedWords(text: string): ModerationResult | null {
+  if (!text.trim()) return null;
+  const normalized = normalizeText(text);
+
+  // Whitelist: se c'è un termine whitelistato, skip
+  for (const w of whitelist) {
+    if (normalized.includes(normalizeText(w))) return null;
+  }
+
+  // Parole complete (split su separatori)
+  const words = normalized.split(/[\s.,!?;:]+/).filter(Boolean);
+
+  let flaggedResult: ModerationResult | null = null;
+
+  for (const entry of terms) {
+    const normalizedTerm = normalizeText(entry.term);
+    const termWords = normalizedTerm.split(/\s+/).filter(Boolean);
+    let matched = false;
+
+    if (termWords.length > 1) {
+      // Frase multi-parola: sottostringa esatta nel testo normalizzato
+      matched = normalized.includes(normalizedTerm);
+    } else {
+      // Singola parola: match ESATTO (non sottostringa)
+      matched = words.some(w => w === normalizedTerm);
+    }
+
+    if (matched) {
+      const result = buildResult(entry);
+      if (result.decision === 'blocked') return result;
+      if (!flaggedResult) flaggedResult = result;
+    }
+  }
+
+  return flaggedResult;
+}
+
 /** Chiama l'edge function moderate-message per valutazione AI contestuale.
  *  Usata per parole "flagged" (ambigue) che il blacklist locale non può decidere da solo. */
 export async function moderateWithAI(
