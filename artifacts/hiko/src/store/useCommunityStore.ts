@@ -1,15 +1,15 @@
 import { create } from 'zustand';
-import type { Community, CommunityChannel, CommunityMember, CommunityMessage, CommunityReaction } from '@/types/index';
+import type { Community, CommunityChannel, CommunityMember, CommunityMessage, CommunityMessageWithProfile, CommunityReaction } from '@/types/index';
 
 interface CommunityState {
   activeCommunity: Community | null;
   activeChannel: CommunityChannel | null;
-  messages: CommunityMessage[];
+  messages: CommunityMessageWithProfile[];
   membership: CommunityMember | null;
   setActiveCommunity: (community: Community | null) => void;
   setActiveChannel: (channel: CommunityChannel | null) => void;
-  setMessages: (messages: CommunityMessage[]) => void;
-  addMessage: (message: CommunityMessage) => void;
+  setMessages: (messages: CommunityMessageWithProfile[]) => void;
+  addMessage: (message: CommunityMessageWithProfile) => void;
   removeMessage: (messageId: string) => void;
   updateMessage: (messageId: string, patch: Partial<CommunityMessage>) => void;
   updateReactions: (messageId: string, reactions: CommunityReaction[]) => void;

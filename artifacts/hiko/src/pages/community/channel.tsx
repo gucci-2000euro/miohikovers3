@@ -7,7 +7,7 @@ import { useCommunityStore } from '@/store/useCommunityStore';
 import { useCommunityMessages } from '@/hooks/useCommunityMessages';
 import { MessageBubble } from '@/components/community/MessageBubble';
 import { MessageComposer } from '@/components/community/MessageComposer';
-import type { CommunityChannel } from '@/types/index';
+import type { CommunityChannel, CommunityMessageWithProfile } from '@/types/index';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 
 export default function ChannelView() {
@@ -50,7 +50,11 @@ export default function ChannelView() {
       tipo: 'testo',
     }).select('*').single();
     if (data && !error) {
-      useCommunityStore.getState().addMessage(data as import('@/types/index').CommunityMessage);
+      const enriched: CommunityMessageWithProfile = {
+        ...data,
+        profiles: { id: user.id, nome: user.name, avatar_url: user.avatar || null },
+      };
+      useCommunityStore.getState().addMessage(enriched);
     }
     return data?.id ?? null;
   };
@@ -72,20 +76,26 @@ export default function ChannelView() {
         <p className="text-white font-bold">{channel?.nome ?? 'Canale'}</p>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
-        {messages.map(msg => (
-          <MessageBubble
-            key={msg.id}
-            message={msg}
-            currentUserId={user?.id ?? ''}
-            onReact={async (emoji) => {
-              if (!user) return;
-              await supabase.from('community_reactions').upsert({ message_id: msg.id, user_id: user.id, emoji });
-            }}
-            onReport={() => {}}
-            onReply={() => {}}
-          />
-        ))}
+      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-1">
+        {messages.map((msg, i) => {
+          const prev = i > 0 ? messages[i - 1] : null;
+          const isFirstInGroup = !prev || prev.user_id !== msg.user_id;
+          return (
+            <div key={msg.id} className={isFirstInGroup && i > 0 ? 'mt-3' : ''}>
+              <MessageBubble
+                message={msg}
+                currentUserId={user?.id ?? ''}
+                isFirstInGroup={isFirstInGroup}
+                onReact={async (emoji) => {
+                  if (!user) return;
+                  await supabase.from('community_reactions').upsert({ message_id: msg.id, user_id: user.id, emoji });
+                }}
+                onReport={() => {}}
+                onReply={() => {}}
+              />
+            </div>
+          );
+        })}
         <div ref={bottomRef} />
       </div>
 

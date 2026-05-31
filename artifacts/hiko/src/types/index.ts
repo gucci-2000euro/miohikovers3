@@ -1,3 +1,14 @@
+// ─── CommunityMessage arricchito con profilo autore ──────────────
+export interface MessageProfile {
+  id: string;
+  nome: string | null;
+  avatar_url: string | null;
+}
+
+export interface CommunityMessageWithProfile extends CommunityMessage {
+  profiles: MessageProfile | null;
+}
+
 // ─── Run ─────────────────────────────────────────────────────────
 export interface Run {
   id: string;

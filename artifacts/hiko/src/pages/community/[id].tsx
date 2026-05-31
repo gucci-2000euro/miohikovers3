@@ -142,7 +142,11 @@ export default function CommunityHub() {
       tipo: partial.tipo ?? 'testo',
     }).select('*').single();
     if (data && !error) {
-      useCommunityStore.getState().addMessage(data as import('@/types/index').CommunityMessage);
+      const enriched: import('@/types/index').CommunityMessageWithProfile = {
+        ...data,
+        profiles: { id: user.id, nome: user.name, avatar_url: user.avatar || null },
+      };
+      useCommunityStore.getState().addMessage(enriched);
     }
     return data?.id ?? null;
   };
@@ -207,26 +211,32 @@ export default function CommunityHub() {
 
         {/* Chat */}
         <div className="flex flex-col flex-1 overflow-hidden">
-          <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
-            {messages.map(msg => (
-              <MessageBubble
-                key={msg.id}
-                message={msg}
-                currentUserId={user?.id ?? ''}
-                isAdmin={isAdmin}
-                onReact={async (emoji) => {
-                  if (!user) return;
-                  await supabase.from('community_reactions').upsert({ message_id: msg.id, user_id: user.id, emoji });
-                }}
-                onReport={() => {
-                  supabase.from('moderation_queue').upsert({ message_id: msg.id, segnalazioni_count: 1 });
-                }}
-                onReply={() => { /* TODO: thread */ }}
-                onDelete={async () => {
-                  await supabase.from('community_messages').update({ eliminato: true }).eq('id', msg.id);
-                }}
-              />
-            ))}
+          <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-1">
+            {messages.map((msg, i) => {
+              const prev = i > 0 ? messages[i - 1] : null;
+              const isFirstInGroup = !prev || prev.user_id !== msg.user_id;
+              return (
+                <div key={msg.id} className={isFirstInGroup && i > 0 ? 'mt-3' : ''}>
+                  <MessageBubble
+                    message={msg}
+                    currentUserId={user?.id ?? ''}
+                    isFirstInGroup={isFirstInGroup}
+                    isAdmin={isAdmin}
+                    onReact={async (emoji) => {
+                      if (!user) return;
+                      await supabase.from('community_reactions').upsert({ message_id: msg.id, user_id: user.id, emoji });
+                    }}
+                    onReport={() => {
+                      supabase.from('moderation_queue').upsert({ message_id: msg.id, segnalazioni_count: 1 });
+                    }}
+                    onReply={() => { /* TODO: thread */ }}
+                    onDelete={async () => {
+                      await supabase.from('community_messages').update({ eliminato: true }).eq('id', msg.id);
+                    }}
+                  />
+                </div>
+              );
+            })}
           </div>
 
           {!isMember && community?.tipo !== 'privata' && (
