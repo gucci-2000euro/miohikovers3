@@ -3,15 +3,17 @@ import { useRoutes } from '@/hooks/useRoutes';
 import { useCommunityStore } from '@/store/useCommunityStore';
 import { RouteCard } from '@/components/route/RouteCard';
 import type { Route } from '@/store/useDataStore';
-import { MapPin, Send, X, Loader2, Search } from 'lucide-react';
+import { MapPin, Send, X, Loader2, Search, MoreHorizontal, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface Props {
   canPost: boolean;
+  currentUserId: string;
   onSendMessage: (partial: { contenuto: string; tipo: string; riferimento_id?: string }) => Promise<string | null>;
+  onDeleteMessage: (messageId: string) => Promise<void>;
 }
 
-export function PercorsiChannelView({ canPost, onSendMessage }: Props) {
+export function PercorsiChannelView({ canPost, currentUserId, onSendMessage, onDeleteMessage }: Props) {
   const messages = useCommunityStore(s => s.messages);
   const { data: routes = [], isLoading: loadingRoutes } = useRoutes();
 
@@ -20,6 +22,7 @@ export function PercorsiChannelView({ canPost, onSendMessage }: Props) {
   const [comment, setComment] = useState('');
   const [search, setSearch] = useState('');
   const [sending, setSending] = useState(false);
+  const [activeMenu, setActiveMenu] = useState<string | null>(null);
 
   const routeMessages = messages.filter(m => m.tipo === 'percorso' && !m.eliminato);
 
@@ -70,6 +73,29 @@ export function PercorsiChannelView({ canPost, onSendMessage }: Props) {
                 }
                 <span className="text-xs font-semibold text-white/70">{name}</span>
                 <span className="text-[10px] text-white/30">{date}</span>
+                {msg.user_id === currentUserId && (
+                  <div className="relative ml-auto">
+                    <button
+                      onClick={() => setActiveMenu(activeMenu === msg.id ? null : msg.id)}
+                      className="p-0.5 text-white/30 hover:text-white/70 transition-colors rounded"
+                    >
+                      <MoreHorizontal size={14} />
+                    </button>
+                    {activeMenu === msg.id && (
+                      <>
+                        <div className="fixed inset-0 z-20" onClick={() => setActiveMenu(null)} />
+                        <div className="absolute right-0 top-6 z-30 bg-hiko-deep border border-white/10 rounded-xl shadow-xl overflow-hidden" style={{ minWidth: 120 }}>
+                          <button
+                            onClick={async () => { await onDeleteMessage(msg.id); setActiveMenu(null); }}
+                            className="flex items-center gap-2 px-3 py-2.5 text-sm text-red-400 hover:bg-red-400/10 w-full whitespace-nowrap"
+                          >
+                            <Trash2 size={13} /> Elimina
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
               <div className="ml-9">
                 {route

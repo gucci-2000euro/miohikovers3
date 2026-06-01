@@ -253,7 +253,15 @@ export default function CommunityHub() {
           {activeChannel?.tipo === 'percorsi' ? (
             <PercorsiChannelView
               canPost={isMember && !isReadOnly}
+              currentUserId={user?.id ?? ''}
               onSendMessage={handleSend}
+              onDeleteMessage={async (msgId) => {
+                const filter = isAdmin
+                  ? supabase.from('community_messages').update({ eliminato: true }).eq('id', msgId)
+                  : supabase.from('community_messages').update({ eliminato: true }).eq('id', msgId).eq('user_id', user!.id);
+                const { error } = await filter;
+                if (!error) useCommunityStore.getState().removeMessage(msgId);
+              }}
             />
           ) : activeChannel?.tipo === 'sfide' ? (
             <SfideChannelView communityId={id ?? ''} />
